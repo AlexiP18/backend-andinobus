@@ -1,0 +1,27 @@
+# Perfil de desarrollo (renombrar a application-dev.properties y ajustar)
+
+# Datasource PostgreSQL (ajustar a tu entorno local)
+spring.datasource.url=jdbc:postgresql://localhost:5432/das_dev
+spring.datasource.username=postgres
+spring.datasource.password=postgres
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA (activar cuando agregues la dependencia spring-boot-starter-data-jpa)
+# Validar esquema gestionado por migraciones (Flyway o Liquibase)
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.format_sql=true
+
+# Flyway (activar cuando agregues la dependencia flyway-core)
+spring.flyway.enabled=true
+spring.flyway.locations=classpath:db/migration
+
+# Server y logging
+server.port=8080
+logging.level.root=INFO
+logging.level.org.springframework.web=INFO
+logging.level.com.andinobus.backendsmartcode=DEBUG
+
+# Opcional: redirigir 404 al GlobalExceptionHandler (si se desea)
+# spring.mvc.throw-exception-if-no-handler-found=true
+# spring.web.resources.add-mappings=false

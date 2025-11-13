@@ -1,0 +1,583 @@
+{
+  "info": {
+    "name": "Backend Smartcode - Colección",
+    "description": "Colección Postman para probar el backend en local (perfil dev para catálogos). Incluye Planificaciones (CSV), Cooperativas, Buses y Frecuencias. Usa variables: baseUrl, coopId, busId, frecuenciaId.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Planificaciones (CSV)",
+      "item": [
+        {
+          "name": "GET ejemplos CSV",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/planificaciones/examples",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "planificaciones",
+                "examples"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST previsualizar CSV (subir archivo)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": []
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/planificaciones/preview",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "planificaciones",
+                "preview"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cooperativas",
+      "item": [
+        {
+          "name": "POST crear cooperativa",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generar RUC aleatorio de 13 dígitos para evitar conflictos únicos",
+                  "const ruc = String(Math.floor(1e12 + Math.random()*9e12));",
+                  "pm.variables.set('ruc', ruc);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('coopId', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cooperativa Demo\",\n  \"ruc\": \"{{ruc}}\",\n  \"logoUrl\": null,\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cooperativas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cooperativas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET listar cooperativas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cooperativas?search=&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cooperativas"
+              ],
+              "query": [
+                { "key": "search", "value": "" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET cooperativa por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cooperativas/{{coopId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cooperativas",
+                "{{coopId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT actualizar cooperativa",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Cooperativa Demo Actualizada\",\n  \"ruc\": \"{{ruc}}\",\n  \"logoUrl\": null,\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cooperativas/{{coopId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cooperativas",
+                "{{coopId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE cooperativa",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cooperativas/{{coopId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cooperativas",
+                "{{coopId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Buses",
+      "item": [
+        {
+          "name": "POST crear bus (coopId)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "exec": [
+                  "// Generar placa aleatoria",
+                  "const placa = 'PMN-' + String(Math.floor(1000 + Math.random()*9000));",
+                  "pm.variables.set('placa', placa);"
+                ],
+                "type": "text/javascript"
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('busId', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroInterno\": \"10\",\n  \"placa\": \"{{placa}}\",\n  \"chasisMarca\": \"Volvo\",\n  \"carroceriaMarca\": \"Marcopolo\",\n  \"fotoUrl\": null,\n  \"activo\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cooperativas/{{coopId}}/buses",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cooperativas",
+                "{{coopId}}",
+                "buses"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET listar buses (coopId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cooperativas/{{coopId}}/buses?page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cooperativas",
+                "{{coopId}}",
+                "buses"
+              ],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET bus por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/buses/{{busId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "buses",
+                "{{busId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Frecuencias",
+      "item": [
+        {
+          "name": "POST crear frecuencia (coopId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('frecuenciaId', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"origen\": \"Quito\",\n  \"destino\": \"Loja\",\n  \"horaSalida\": \"18:00\",\n  \"duracionEstimadaMin\": 720,\n  \"diasOperacion\": \"LUN,MAR,MIER,JUE,VIER,SAB,DOM\",\n  \"activa\": true\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/cooperativas/{{coopId}}/frecuencias",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cooperativas",
+                "{{coopId}}",
+                "frecuencias"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET listar frecuencias (coopId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/cooperativas/{{coopId}}/frecuencias?search=&page=0&size=20",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "cooperativas",
+                "{{coopId}}",
+                "frecuencias"
+              ],
+              "query": [
+                { "key": "search", "value": "" },
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET frecuencia por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/frecuencias/{{frecuenciaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "frecuencias",
+                "{{frecuenciaId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT actualizar frecuencia",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"horaSalida\": \"19:30\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/frecuencias/{{frecuenciaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "frecuencias",
+                "{{frecuenciaId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE frecuencia",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/frecuencias/{{frecuenciaId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "frecuencias",
+                "{{frecuenciaId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Paradas",
+      "item": [
+        {
+          "name": "POST crear parada (frecuenciaId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 201', function () { pm.response.to.have.status(201); });",
+                  "const json = pm.response.json();",
+                  "pm.collectionVariables.set('paradaId', json.id);"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ciudad\": \"Latacunga\",\n  \"orden\": 1,\n  \"horaEstimada\": \"19:30\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/frecuencias/{{frecuenciaId}}/paradas",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "frecuencias",
+                "{{frecuenciaId}}",
+                "paradas"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET listar paradas (frecuenciaId)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/frecuencias/{{frecuenciaId}}/paradas",
+              "host": ["{{baseUrl}}"],
+              "path": ["frecuencias", "{{frecuenciaId}}", "paradas"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET parada por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paradas/{{paradaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["paradas", "{{paradaId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PUT actualizar parada",
+          "request": {
+            "method": "PUT",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"horaEstimada\": \"20:00\",\n  \"orden\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/paradas/{{paradaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["paradas", "{{paradaId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE parada",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "pm.test('Status 204', function () { pm.response.to.have.status(204); });"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/paradas/{{paradaId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["paradas", "{{paradaId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Rutas y viajes",
+      "item": [
+        {
+          "name": "GET viajes por fecha",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/viajes?fecha=2025-12-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["viajes"],
+              "query": [
+                { "key": "fecha", "value": "2025-12-01" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080" },
+    { "key": "coopId", "value": "" },
+    { "key": "busId", "value": "" },
+    { "key": "frecuenciaId", "value": "" },
+    { "key": "paradaId", "value": "" }
+  ]
+}
