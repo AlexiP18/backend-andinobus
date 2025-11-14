@@ -1,0 +1,219 @@
+{
+  "info": {
+    "name": "Backend Smartcode - Operación, Rutas, Usuarios, Ventas y Embarque",
+    "description": "Colección Postman para probar módulos de operación, rutas, usuarios, ventas y embarque usando el backend en local. Usa environment Local. Variables utilizadas: baseUrl, viajeId, reservaId, boletoCodigo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth y Usuarios (stub)",
+      "item": [
+        {
+          "name": "POST /auth/login",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"demo\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/login", "host": ["{{baseUrl}}"], "path": ["auth","login"] }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/register",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"email\": \"cliente+demo@example.com\",\n  \"password\": \"demo\",\n  \"nombres\": \"Cliente\",\n  \"apellidos\": \"Demo\"\n}" },
+            "url": { "raw": "{{baseUrl}}/auth/register", "host": ["{{baseUrl}}"], "path": ["auth","register"] }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /users/me",
+          "request": {
+            "method": "GET",
+            "header": [ { "key": "X-Demo-Token", "value": "demo-token-admin" } ],
+            "url": { "raw": "{{baseUrl}}/users/me", "host": ["{{baseUrl}}"], "path": ["users","me"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Rutas y Viajes (stub)",
+      "item": [
+        {
+          "name": "GET /rutas/buscar",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/rutas/buscar?origen=Quito&destino=Loja&fecha=2025-12-01&tipoViaje=directo",
+              "host": ["{{baseUrl}}"],
+              "path": ["rutas","buscar"],
+              "query": [
+                {"key":"origen","value":"Quito"},
+                {"key":"destino","value":"Loja"},
+                {"key":"fecha","value":"2025-12-01"},
+                {"key":"tipoViaje","value":"directo"}
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /viajes?fecha=YYYY-MM-DD (guarda viajeId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function () { pm.response.to.have.status(200); });",
+                  "const j = pm.response.json();",
+                  "if (j.items && j.items.length) { pm.collectionVariables.set('viajeId', j.items[0].id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/viajes?fecha=2025-12-01",
+              "host": ["{{baseUrl}}"],
+              "path": ["viajes"],
+              "query": [{"key":"fecha","value":"2025-12-01"}]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /viajes/{{viajeId}}/disponibilidad",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/viajes/{{viajeId}}/disponibilidad", "host": ["{{baseUrl}}"], "path": ["viajes","{{viajeId}}","disponibilidad"] }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /viajes/{{viajeId}}/bus",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/viajes/{{viajeId}}/bus", "host": ["{{baseUrl}}"], "path": ["viajes","{{viajeId}}","bus"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Ventas (stubs)",
+      "item": [
+        {
+          "name": "POST /reservas (guarda reservaId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": [
+                "pm.test('201 Created', function(){ pm.response.to.have.status(201); });",
+                "const j = pm.response.json(); pm.collectionVariables.set('reservaId', j.id);"
+              ]}
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"viajeId\": {{viajeId}},\n  \"asientos\": [\n    \"2A\", \"2B\"\n  ]\n}" },
+            "url": { "raw": "{{baseUrl}}/reservas", "host": ["{{baseUrl}}"], "path": ["reservas"] }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /reservas/{{reservaId}}",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/reservas/{{reservaId}}", "host": ["{{baseUrl}}"], "path": ["reservas","{{reservaId}}"] } },
+          "response": []
+        },
+        {
+          "name": "POST /pagos/transferencia (marca pagado)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                { "key": "reservaId", "value": "{{reservaId}}", "type": "text" },
+                { "key": "monto", "value": "10.00", "type": "text" },
+                { "key": "referencia", "value": "DEP-123", "type": "text" }
+              ]
+            },
+            "url": { "raw": "{{baseUrl}}/pagos/transferencia", "host": ["{{baseUrl}}"], "path": ["pagos","transferencia"] }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /boletos/emitir (guarda boletoCodigo)",
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": [
+                "pm.test('201 Created', function(){ pm.response.to.have.status(201); });",
+                "const j = pm.response.json(); pm.collectionVariables.set('boletoCodigo', j.codigo);"
+              ] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"reservaId\": {{reservaId}}\n}" },
+            "url": { "raw": "{{baseUrl}}/boletos/emitir", "host": ["{{baseUrl}}"], "path": ["boletos","emitir"] }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /boletos/{{boletoCodigo}}",
+          "request": { "method": "GET", "url": { "raw": "{{baseUrl}}/boletos/{{boletoCodigo}}", "host": ["{{baseUrl}}"], "path": ["boletos","{{boletoCodigo}}"] } },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Embarque (stub)",
+      "item": [
+        {
+          "name": "POST /embarque/scan (usa boletoCodigo)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"codigo\": \"{{boletoCodigo}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/embarque/scan", "host": ["{{baseUrl}}"], "path": ["embarque","scan"] }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /embarque/scan (re-scan)",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"codigo\": \"{{boletoCodigo}}\"\n}" },
+            "url": { "raw": "{{baseUrl}}/embarque/scan", "host": ["{{baseUrl}}"], "path": ["embarque","scan"] }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Operación (stub)",
+      "item": [
+        {
+          "name": "POST /hojas-ruta/generar",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": { "mode": "raw", "raw": "{\n  \"fecha\": \"2025-12-01\",\n  \"cooperativaId\": 1,\n  \"modo\": \"DIARIA\"\n}" },
+            "url": { "raw": "{{baseUrl}}/hojas-ruta/generar", "host": ["{{baseUrl}}"], "path": ["hojas-ruta","generar"] }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": []
+}

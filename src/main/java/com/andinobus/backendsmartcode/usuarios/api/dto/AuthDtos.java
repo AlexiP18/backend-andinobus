@@ -1,5 +1,6 @@
 package com.andinobus.backendsmartcode.usuarios.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
@@ -35,6 +36,25 @@ public class AuthDtos {
         private String rol;
         private String nombres;
         private String apellidos;
+
+        // Aliases para compatibilidad con posibles expectativas del frontend
+        @JsonProperty("role")
+        public String getRole() { return rol; }
+        @JsonProperty("id")
+        public Long getId() { return userId; }
+        @JsonProperty("firstName")
+        public String getFirstName() { return nombres; }
+        @JsonProperty("lastName")
+        public String getLastName() { return apellidos; }
+        @JsonProperty("name")
+        public String getName() {
+            if (nombres == null && apellidos == null) return null;
+            if (nombres == null) return apellidos;
+            if (apellidos == null) return nombres;
+            return (nombres + " " + apellidos).trim();
+        }
+        @JsonProperty("username")
+        public String getUsername() { return email; }
     }
 
     @Data
@@ -45,5 +65,24 @@ public class AuthDtos {
         private String rol;
         private String nombres;
         private String apellidos;
+
+        // Aliases para compatibilidad con posibles expectativas del frontend
+        @JsonProperty("role")
+        public String getRole() { return rol; }
+        @JsonProperty("id")
+        public Long getId() { return userId; }
+        @JsonProperty("firstName")
+        public String getFirstName() { return nombres; }
+        @JsonProperty("lastName")
+        public String getLastName() { return apellidos; }
+        @JsonProperty("name")
+        public String getName() {
+            if (nombres == null && apellidos == null) return null;
+            if (nombres == null) return apellidos;
+            if (apellidos == null) return nombres;
+            return (nombres + " " + apellidos).trim();
+        }
+        @JsonProperty("username")
+        public String getUsername() { return email; }
     }
 }

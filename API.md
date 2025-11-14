@@ -101,12 +101,14 @@ Base URL: http://localhost:8080
 ## Autenticación y usuarios (stub)
 - POST /auth/login
   - Retorna token mock según el email (si contiene "admin" → rol ADMIN; caso contrario CLIENTE).
+  - Compatibilidad de respuesta: además de { token, userId, email, rol, nombres, apellidos }, se exponen alias JSON por compatibilidad: { id, role, firstName, lastName, name, username }.
 - POST /auth/register (cliente)
   - Crea un usuario cliente (stub) y retorna token mock.
 - GET /users/me
   - Retorna el usuario actual en base a un token demo. Puedes enviar:
     - Header Authorization: Bearer demo-token-admin | demo-token-client
     - o Header X-Demo-Token: demo-token-admin | demo-token-client
+  - Compatibilidad de respuesta: mismos alias JSON que /auth/login.
 
 ## Ventas y pagos (stubs)
 - POST /reservas
@@ -204,3 +206,13 @@ Base URL: http://localhost:8080
      - Perfil dev (Cooperativas, Buses y Frecuencias): mvn spring-boot:run -Dspring-boot.run.profiles=dev
   4) Ejecuta las requests en el orden sugerido dentro de la colección. Las pruebas (tests) de Postman guardan automáticamente variables como coopId, busId y frecuenciaId para usarlas en las siguientes llamadas.
 - Nota: Los endpoints de catálogos se exponen solo con el perfil dev activo.
+
+
+---
+
+## Integración con FrontEnd (FrontAndinaBus)
+- Se analizó el repositorio https://github.com/xLexus/FrontAndinaBus con foco en:
+  - app/components, app/dashboard, app/login, app/register
+- El mapeo Front → Back y recomendaciones de integración están documentados en FRONTEND_COMPATIBILITY.md.
+- Postman: además de la colección principal, se agregó postman/BackendSmartcode-OperacionesVentas.postman_collection.json para probar usuarios, rutas, ventas y embarque de extremo a extremo.
+- Nota CORS: CORS está habilitado por defecto para http://localhost:3000 (configurable con `app.cors.allowed-origins`).

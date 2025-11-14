@@ -164,3 +164,35 @@ Notas y resolución de problemas:
 - Si ves 404 en catálogos, asegúrate de estar corriendo el perfil `dev` y de que PostgreSQL esté configurado (ver `src/main/resources/application-dev.properties`).
 - Si falla la conexión a BD, revisa URL/usuario/clave y que la base `das_dev` exista.
 - Si tu PostgreSQL no usa el puerto 5432, ajusta `spring.datasource.url`.
+
+---
+
+## 2.5) Levantar PostgreSQL con Docker Compose (opción rápida)
+Si no tienes PostgreSQL instalado localmente, puedes usar el archivo docker-compose.yml incluido en la raíz del proyecto.
+
+1) Requisitos previos
+- Docker Desktop instalado y en ejecución.
+
+2) Arrancar PostgreSQL
+- PowerShell (en la carpeta del proyecto):
+  - docker compose up -d
+- Esto levantará un contenedor postgres:16-alpine con:
+  - DB: das_dev
+  - Usuario: postgres
+  - Clave: postgres
+  - Puerto: 5432
+
+3) Verificar estado (opcional)
+- docker ps (deberías ver andinobus-postgres)
+- docker logs -f andinobus-postgres (hasta ver que está listo para aceptar conexiones)
+
+4) Detener o reiniciar
+- Detener: docker compose down
+- Reiniciar limpio (borra datos):
+  - docker compose down -v
+  - docker compose up -d
+
+5) Siguiente paso
+- Con el contenedor arriba, sigue con la sección "3) Arrancar con base de datos (perfil dev)" y ejecuta la app con:
+  - mvn spring-boot:run -Dspring-boot.run.profiles=dev
+- Flyway aplicará automáticamente V1__init_catalogos.sql y V2__usuarios_ventas_operacion_embarque.sql.
