@@ -11,4 +11,18 @@ import org.springframework.stereotype.Repository;
 @Profile("dev")
 public interface BusRepository extends JpaRepository<Bus, Long> {
     Page<Bus> findByCooperativa_IdAndActivoTrue(Long cooperativaId, Pageable pageable);
+    
+    java.util.List<Bus> findByActivoTrue();
+    
+    java.util.List<Bus> findByCooperativaId(Long cooperativaId);
+    
+    java.util.List<Bus> findByCooperativaIdAndActivoTrue(Long cooperativaId);
+    
+    java.util.List<Bus> findByEstado(String estado);
+    
+    int countByCooperativaId(Long cooperativaId);
+    
+    int countByCooperativaIdAndActivoTrue(Long cooperativaId);
+    
+    java.util.Optional<Bus> findByPlaca(String placa);
 }

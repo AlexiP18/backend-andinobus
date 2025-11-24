@@ -25,10 +25,15 @@ public class UserToken {
     @Column(name = "user_id", nullable = false)
     private Long userId;
     
+    @Column(name = "user_type", length = 20)
+    @Builder.Default
+    private String userType = "CLIENTE"; // CLIENTE, COOPERATIVA, ADMIN
+    
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
     
     @Column(name = "created_at", nullable = false)
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
     
     @PrePersist

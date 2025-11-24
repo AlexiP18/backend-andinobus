@@ -20,7 +20,7 @@ public class Bus {
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "cooperativa_id", nullable = false)
-    private Cooperativa cooperativa;
+    private com.andinobus.backendsmartcode.catalogos.domain.entities.Cooperativa cooperativa;
 
     @Column(name = "numero_interno", length = 50)
     private String numeroInterno;
@@ -37,7 +37,19 @@ public class Bus {
     @Column(name = "foto_url", length = 500)
     private String fotoUrl;
 
+    @Column(name = "foto_filename", length = 255)
+    private String fotoFilename;
+
+    @Column(name = "capacidad_asientos")
+    @Builder.Default
+    private Integer capacidadAsientos = 40; // Capacidad total de asientos del bus
+
+    @Column(nullable = false, length = 32)
+    @Builder.Default
+    private String estado = "DISPONIBLE"; // DISPONIBLE | EN_SERVICIO | MANTENIMIENTO | PARADA
+
     @Column(nullable = false)
+    @Builder.Default
     private Boolean activo = true;
 
     @Column(name = "created_at", nullable = false)
@@ -52,6 +64,8 @@ public class Bus {
         if (createdAt == null) createdAt = now;
         if (updatedAt == null) updatedAt = now;
         if (activo == null) activo = true;
+        if (estado == null) estado = "DISPONIBLE";
+        if (capacidadAsientos == null) capacidadAsientos = 40;
     }
 
     @PreUpdate

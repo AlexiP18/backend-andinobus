@@ -20,6 +20,7 @@ public class RutasDtos {
         private String duracionEstimada;
         private String tipoViaje; // directo | con_paradas
         private Map<String, Integer> asientosPorTipo; // Normal/VIP → disponibles (mock)
+        private String fecha; // Fecha del viaje (para ordenamiento)
     }
 
     @Data

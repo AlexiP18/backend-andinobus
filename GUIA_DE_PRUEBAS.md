@@ -118,12 +118,33 @@ Notas:
 
 ## 5) Problemas comunes y soluciones
 - Puerto en uso (8080):
-  - Cambia el puerto en `application-dev.properties` con `server.port=8081` (u otro), o cierra el proceso que ocupa 8080.
+  - Opción 1 (rápida): establece una variable de entorno antes de iniciar:
+    - PowerShell: `$env:PORT=8081; mvn spring-boot:run`
+    - CMD: `set PORT=8081 && mvn spring-boot:run`
+  - Opción 2: pasa el puerto por argumento de Spring Boot:
+    - `mvn spring-boot:run -Dspring-boot.run.arguments="--server.port=8081"`
+  - Opción 3: usa el script incluido (perfil dev):
+    - `run-dev.bat 8081`
+  - Opción 4: edita temporalmente `src/main/resources/application.properties` y cambia `server.port` (por defecto respeta `PORT`/`SERVER_PORT`).
+  - Encontrar y cerrar proceso en 8080 (Windows):
+    - `netstat -ano | findstr :8080`
+    - identifica el PID, luego: `taskkill /PID <PID> /F`
 - Error de conexión a base de datos:
   - Verifica URL/usuario/clave en `application-dev.properties`.
   - Asegura que PostgreSQL está iniciado y que la base `das_dev` existe.
 - 404 en endpoints de catálogos:
   - Asegúrate de arrancar la app con `-Dspring-boot.run.profiles=dev`.
+- Advertencia Flyway al aplicar V9 (DB: «la columna “hora_salida_programada” ya existe, omitiendo»):
+  - Es normal: proviene de PostgreSQL (NOTICE) al usar `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`.
+  - Flyway lo registra como WARN, pero la migración se aplica correctamente. Puedes ignorarlo con seguridad.
+  - No modifiques archivos de migración ya aplicados para ocultarlo: causaría error de checksum en Flyway.
+  - Si deseas silenciar el NOTICE en tu entorno, puedes ajustar temporalmente el nivel: `SET client_min_messages = WARNING;` en una migración posterior (no recomendado en producción). 
+- Error Flyway: "Migration checksum mismatch" (p. ej., en V14):
+  - Causa: se editó un archivo de migración ya aplicado o se reversionó un script existente.
+  - Solución recomendada: no edites migraciones ya aplicadas; crea una nueva `Vxx__...` con los cambios. Si tu BD ya quedó con el checksum anterior, ejecuta una reparación:
+    - Opción A (recomendada): usa Flyway CLI → `flyway repair` (actualiza checksums en `flyway_schema_history`).
+    - Opción B (avanzada): ajusta el checksum manualmente en la tabla `flyway_schema_history` (bajo tu responsabilidad).
+  - Para facilitar el desarrollo local, el perfil `dev` tiene deshabilitada la validación de checksum: `spring.flyway.validate-on-migrate=false` en `application-dev.properties`. En producción se recomienda mantener la validación activada.
 
 ---
 

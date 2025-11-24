@@ -2,6 +2,7 @@ package com.andinobus.backendsmartcode.ventas.api.controllers;
 
 import com.andinobus.backendsmartcode.ventas.api.dto.VentasDtos;
 import jakarta.validation.Valid;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
@@ -14,6 +15,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 
+@Profile("!dev")
 @RestController
 public class VentasController {
 
@@ -93,10 +95,10 @@ public class VentasController {
         }
         String codigo = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         VentasDtos.BoletoResponse br = VentasDtos.BoletoResponse.builder()
-                .codigo(codigo)
+                .codigoBoleto(codigo)
                 .reservaId(req.getReservaId())
                 .estado("emitido")
-                .qr("QR-" + codigo)
+                .codigoQR("QR-" + codigo)
                 .build();
         BOLETOS.put(codigo, br);
         return br;

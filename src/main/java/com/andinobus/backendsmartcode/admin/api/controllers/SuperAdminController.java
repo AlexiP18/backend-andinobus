@@ -1,0 +1,52 @@
+package com.andinobus.backendsmartcode.admin.api.controllers;
+
+import com.andinobus.backendsmartcode.admin.api.dto.SuperAdminDtos;
+import com.andinobus.backendsmartcode.admin.application.services.SuperAdminStatsService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@Slf4j
+@Profile("dev")
+@RestController
+@RequestMapping("/api/admin")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "*")
+public class SuperAdminController {
+
+    private final SuperAdminStatsService superAdminStatsService;
+
+    /**
+     * Obtener estadísticas globales del sistema para el Super Admin
+     */
+    @GetMapping("/stats")
+    public ResponseEntity<SuperAdminDtos.SuperAdminStatsResponse> getStats() {
+        log.info("GET /api/admin/stats - Obteniendo estadísticas globales");
+        SuperAdminDtos.SuperAdminStatsResponse stats = superAdminStatsService.getStats();
+        return ResponseEntity.ok(stats);
+    }
+
+    /**
+     * Obtener lista de todas las cooperativas con información resumida
+     */
+    @GetMapping("/cooperativas")
+    public ResponseEntity<List<SuperAdminDtos.CooperativaInfo>> getAllCooperativas() {
+        log.info("GET /api/admin/cooperativas - Obteniendo lista de cooperativas");
+        List<SuperAdminDtos.CooperativaInfo> cooperativas = superAdminStatsService.getAllCooperativas();
+        return ResponseEntity.ok(cooperativas);
+    }
+
+    /**
+     * Obtener detalle completo de una cooperativa específica
+     */
+    @GetMapping("/cooperativas/{id}")
+    public ResponseEntity<SuperAdminDtos.CooperativaDetalleResponse> getCooperativaDetalle(@PathVariable Long id) {
+        log.info("GET /api/admin/cooperativas/{} - Obteniendo detalle de cooperativa", id);
+        SuperAdminDtos.CooperativaDetalleResponse detalle = superAdminStatsService.getCooperativaDetalle(id);
+        return ResponseEntity.ok(detalle);
+    }
+}

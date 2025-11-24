@@ -10,16 +10,54 @@ import org.springframework.web.bind.annotation.*;
 
 @Profile("dev")
 @RestController
+@RequestMapping("/api")
 @RequiredArgsConstructor
 public class AuthController {
     
     private final AuthService authService;
 
-    @PostMapping("/auth/login")
-    public AuthDtos.AuthResponse login(@Valid @RequestBody AuthDtos.LoginRequest req) {
-        return authService.login(req);
+    /**
+     * Login para usuarios CLIENTE (tabla: app_user)
+     * POST /api/auth/login-cliente
+     */
+    @PostMapping("/auth/login-cliente")
+    public AuthDtos.AuthResponse loginCliente(@Valid @RequestBody AuthDtos.LoginRequest req) {
+        return authService.loginCliente(req);
     }
 
+    /**
+     * Login para usuarios COOPERATIVA (tabla: usuario_cooperativa)
+     * Incluye: ADMIN, OFICINISTA, CHOFER
+     * POST /api/auth/login-cooperativa
+     */
+    @PostMapping("/auth/login-cooperativa")
+    public AuthDtos.AuthResponse loginCooperativa(@Valid @RequestBody AuthDtos.LoginRequest req) {
+        return authService.loginCooperativa(req);
+    }
+
+    /**
+     * Login para ADMINISTRADOR del sistema (hardcoded)
+     * POST /api/auth/login-admin
+     */
+    @PostMapping("/auth/login-admin")
+    public AuthDtos.AuthResponse loginAdmin(@Valid @RequestBody AuthDtos.LoginRequest req) {
+        return authService.loginAdmin(req);
+    }
+
+    /**
+     * Login genérico (mantener para compatibilidad)
+     * Redirige a loginCliente
+     * POST /api/auth/login
+     */
+    @PostMapping("/auth/login")
+    public AuthDtos.AuthResponse login(@Valid @RequestBody AuthDtos.LoginRequest req) {
+        return authService.loginCliente(req);
+    }
+
+    /**
+     * Registro de nuevo usuario CLIENTE
+     * POST /api/auth/register
+     */
     @PostMapping("/auth/register")
     @ResponseStatus(HttpStatus.CREATED)
     public AuthDtos.AuthResponse register(@Valid @RequestBody AuthDtos.RegisterRequest req) {
@@ -52,5 +90,14 @@ public class AuthController {
         if (token != null && !token.isEmpty()) {
             authService.logout(token);
         }
+    }
+    
+    /**
+     * Endpoint temporal para resetear contraseñas de usuarios cooperativa
+     * GET /api/auth/reset-cooperativa-passwords
+     */
+    @GetMapping("/auth/reset-cooperativa-passwords")
+    public String resetCooperativaPasswords() {
+        return authService.resetCooperativaPasswords();
     }
 }

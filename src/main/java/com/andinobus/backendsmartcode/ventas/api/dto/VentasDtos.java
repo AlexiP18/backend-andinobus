@@ -18,6 +18,7 @@ public class VentasDtos {
         private List<String> asientos; // ej.: ["1A","1B"]
         private String tipoAsiento; // Normal/VIP
         private Long clienteId; // opcional en stub
+        private String clienteEmail; // email del cliente (dev)
     }
 
     @Data
@@ -39,6 +40,16 @@ public class VentasDtos {
         private List<String> asientos;
         private String estado;
         private BigDecimal monto;
+        
+        // Información del viaje
+        private String fecha;
+        private String horaSalida;
+        private String origen;
+        private String destino;
+        private String busPlaca;
+        private String cooperativaNombre;
+        private String rutaNombre;
+        private String codigoBoleto;
     }
 
     @Data
@@ -65,9 +76,55 @@ public class VentasDtos {
     @Data
     @Builder
     public static class BoletoResponse {
-        private String codigo;
+        private String codigoBoleto;
         private Long reservaId;
         private String estado;
-        private String qr; // data URL o placeholder
+        private String codigoQR; // data URL base64
+    }
+
+    @Data
+    @Builder
+    public static class AsientoDisponibilidadDto {
+        private String numeroAsiento; // "1A", "2B", etc.
+        private String tipoAsiento; // "NORMAL", "VIP", "ACONDICIONADO"
+        private String estado; // "DISPONIBLE", "RESERVADO", "VENDIDO", "BLOQUEADO"
+        private Integer fila; // Fila del asiento en el layout
+        private Integer columna; // Columna del asiento en el layout (0-4)
+    }
+
+    @Data
+    @Builder
+    public static class PagoConfirmacionRequest {
+        private Long reservaId;
+        private String metodoPago; // "EFECTIVO", "TARJETA", "PAYPAL"
+        private String referencia; // Opcional: número de transacción
+    }
+
+    @Data
+    @Builder
+    public static class PagoResponse {
+        private Long reservaId;
+        private String estado; // "PAGADO", "RECHAZADO"
+        private String mensaje;
+    }
+
+    @Data
+    @Builder
+    public static class ReservaCooperativaDto {
+        private Long id;
+        private Long viajeId;
+        private String clienteEmail;
+        private Integer asientos;
+        private String estado;
+        private BigDecimal monto;
+        private String expiresAt;
+        private String createdAt;
+        // Datos del viaje
+        private String fecha;
+        private String horaSalida;
+        private String origen;
+        private String destino;
+        private String busPlaca;
+        private String rutaNombre;
     }
 }

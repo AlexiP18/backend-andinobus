@@ -38,5 +38,6 @@ public class Frecuencia {
     private String diasOperacion;
 
     @Column(name = "activa", nullable = false)
+    @Builder.Default
     private Boolean activa = true;
 }

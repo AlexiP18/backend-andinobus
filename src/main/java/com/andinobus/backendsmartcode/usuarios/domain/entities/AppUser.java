@@ -32,12 +32,15 @@ public class AppUser {
     private String apellidos;
     
     @Column(nullable = false, length = 32)
+    @Builder.Default
     private String rol = "CLIENTE";
     
     @Column(nullable = false)
+    @Builder.Default
     private Boolean activo = true;
     
     @Column(name = "created_at", nullable = false)
+    @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
     
     @PrePersist

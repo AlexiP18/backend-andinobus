@@ -33,9 +33,17 @@ public class AuthDtos {
         private String token;
         private Long userId;
         private String email;
-        private String rol;
+        private String rol; // CLIENTE | COOPERATIVA | ADMIN
         private String nombres;
         private String apellidos;
+        private String fotoUrl;
+        
+        // Campos adicionales para usuarios COOPERATIVA
+        private String rolCooperativa; // ADMIN | OFICINISTA | CHOFER (solo si rol=COOPERATIVA)
+        private Long cooperativaId; // ID de la cooperativa (solo si rol=COOPERATIVA)
+        private String cooperativaNombre; // Nombre de la cooperativa (solo si rol=COOPERATIVA)
+        private String cedula;
+        private String telefono;
 
         // Aliases para compatibilidad con posibles expectativas del frontend
         @JsonProperty("role")
@@ -65,6 +73,14 @@ public class AuthDtos {
         private String rol;
         private String nombres;
         private String apellidos;
+        private String cedula;
+        private String telefono;
+        private String fotoUrl;
+        
+        // Campos específicos de cooperativa
+        private String rolCooperativa;
+        private Long cooperativaId;
+        private String cooperativaNombre;
 
         // Aliases para compatibilidad con posibles expectativas del frontend
         @JsonProperty("role")

@@ -28,6 +28,7 @@ public class Cooperativa {
     private String logoUrl;
 
     @Column(nullable = false)
+    @Builder.Default
     private Boolean activo = true;
 
     @Column(name = "created_at", nullable = false)
