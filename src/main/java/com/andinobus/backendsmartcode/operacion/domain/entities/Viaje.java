@@ -69,10 +69,29 @@ public class Viaje {
 
     @Column(nullable = false, length = 20)
     @Builder.Default
-    private String estado = "PROGRAMADO"; // PROGRAMADO | EN_TERMINAL | EN_RUTA | COMPLETADO | CANCELADO
+    private String estado = "PROGRAMADO"; // PROGRAMADO | EN_TERMINAL | EN_RUTA | COMPLETADO | CANCELADO | EN_CURSO | FINALIZADO | CANCELADO
 
     @Column(columnDefinition = "TEXT")
     private String observaciones;
+
+    // ===================================
+    // Campos de tracking GPS
+    // ===================================
+
+    @Column(name = "hora_inicio_real")
+    private LocalDateTime horaInicioReal;
+
+    @Column(name = "hora_fin_real")
+    private LocalDateTime horaFinReal;
+
+    @Column(name = "latitud_actual")
+    private Double latitudActual;
+
+    @Column(name = "longitud_actual")
+    private Double longitudActual;
+
+    @Column(name = "ultima_actualizacion")
+    private LocalDateTime ultimaActualizacion;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
@@ -129,5 +148,27 @@ public class Viaje {
 
     public boolean haFinalizado() {
         return horaLlegadaReal != null;
+    }
+
+    // ===================================
+    // Métodos de tracking GPS
+    // ===================================
+
+    public boolean isEnCurso() {
+        return "EN_CURSO".equals(this.estado) || "EN_RUTA".equals(this.estado);
+    }
+
+    public boolean isFinalizado() {
+        return "FINALIZADO".equals(this.estado) || "COMPLETADO".equals(this.estado);
+    }
+
+    public void actualizarPosicion(Double latitud, Double longitud) {
+        this.latitudActual = latitud;
+        this.longitudActual = longitud;
+        this.ultimaActualizacion = LocalDateTime.now();
+    }
+
+    public boolean tienePosicionActual() {
+        return latitudActual != null && longitudActual != null;
     }
 }

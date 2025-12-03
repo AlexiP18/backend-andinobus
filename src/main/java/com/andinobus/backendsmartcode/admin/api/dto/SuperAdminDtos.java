@@ -91,4 +91,17 @@ public class SuperAdminDtos {
         private String rol;
         private boolean activo;
     }
+
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ClienteInfo {
+        private Long id;
+        private String email;
+        private String nombres;
+        private String apellidos;
+        private boolean activo;
+        private String createdAt;
+    }
 }

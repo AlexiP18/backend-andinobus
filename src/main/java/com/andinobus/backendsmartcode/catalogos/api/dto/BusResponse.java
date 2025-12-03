@@ -13,5 +13,9 @@ public class BusResponse {
     private String chasisMarca;
     private String carroceriaMarca;
     private String fotoUrl;
+    private Integer capacidadAsientos;
+    private Boolean tieneDosNiveles;
+    private Integer capacidadPiso1;
+    private Integer capacidadPiso2;
     private Boolean activo;
 }

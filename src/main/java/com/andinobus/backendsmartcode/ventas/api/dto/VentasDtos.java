@@ -90,6 +90,14 @@ public class VentasDtos {
         private String estado; // "DISPONIBLE", "RESERVADO", "VENDIDO", "BLOQUEADO"
         private Integer fila; // Fila del asiento en el layout
         private Integer columna; // Columna del asiento en el layout (0-4)
+        private Integer piso; // Piso del asiento (1 o 2 para buses de dos pisos)
+    }
+
+    @Data
+    @Builder
+    public static class AsientosViajeResponse {
+        private Long viajeId; // ID real del viaje para crear reservas
+        private List<AsientoDisponibilidadDto> asientos;
     }
 
     @Data

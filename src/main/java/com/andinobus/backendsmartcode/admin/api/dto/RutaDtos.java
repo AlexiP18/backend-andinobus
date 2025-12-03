@@ -24,6 +24,12 @@ public class RutaDtos {
         private LocalDate vigenciaHasta;
         private String observacionesAnt;
         private Boolean activo;
+        private String tipoRuta; // INTERPROVINCIAL o INTRAPROVINCIAL
+        private Long terminalOrigenId;
+        private Long terminalDestinoId;
+        private String terminalOrigenNombre;
+        private String terminalDestinoNombre;
+        private Integer cantidadCaminos; // Cantidad de caminos asociados a la ruta
     }
 
     @Data

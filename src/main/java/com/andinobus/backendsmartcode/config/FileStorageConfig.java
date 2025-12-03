@@ -22,7 +22,8 @@ public class FileStorageConfig implements WebMvcConfigurer {
     private static final String[] REQUIRED_DIRECTORIES = {
             "uploads/personal/fotos",
             "uploads/clientes/fotos",
-            "uploads/buses/fotos"
+            "uploads/buses/fotos",
+            "uploads/logos"
     };
 
     /**
@@ -66,6 +67,11 @@ public class FileStorageConfig implements WebMvcConfigurer {
         // Servir archivos de fotos de buses (para uso futuro)
         registry.addResourceHandler("/uploads/buses/fotos/**")
                 .addResourceLocations("file:uploads/buses/fotos/")
+                .setCachePeriod(3600);
+
+        // Servir archivos de logos de cooperativas
+        registry.addResourceHandler("/uploads/logos/**")
+                .addResourceLocations("file:uploads/logos/")
                 .setCachePeriod(3600);
     }
 }

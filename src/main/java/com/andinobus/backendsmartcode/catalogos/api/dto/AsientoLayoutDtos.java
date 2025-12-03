@@ -22,6 +22,7 @@ public class AsientoLayoutDtos {
         private Integer fila;
         private Integer columna;
         private String tipoAsiento; // NORMAL | VIP | ACONDICIONADO
+        private Integer piso; // 1 = Piso 1, 2 = Piso 2
         private Boolean habilitado;
     }
 
@@ -78,6 +79,7 @@ public class AsientoLayoutDtos {
         private Integer columnas;
         private Boolean sobrescribir; // Si true, elimina el layout existente
         private Boolean incluirFilaTrasera; // Si true, agrega una fila continua de 5 asientos al final
+        private Integer piso; // 1 = Piso 1, 2 = Piso 2 (opcional, por defecto 1)
     }
 
     /**
@@ -117,5 +119,7 @@ public class AsientoLayoutDtos {
         private String message;
         private Integer asientosCreados;
         private Integer asientosActualizados;
+        private Integer asientosHabilitados;
+        private Integer asientosDeshabilitados;
     }
 }

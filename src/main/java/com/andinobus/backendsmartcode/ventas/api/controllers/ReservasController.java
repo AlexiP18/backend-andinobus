@@ -68,12 +68,12 @@ public class ReservasController {
     }
 
     @GetMapping("/frecuencia/{frecuenciaId}/asientos")
-    public ResponseEntity<List<VentasDtos.AsientoDisponibilidadDto>> obtenerAsientosDisponiblesPorFrecuencia(
+    public ResponseEntity<VentasDtos.AsientosViajeResponse> obtenerAsientosDisponiblesPorFrecuencia(
             @PathVariable Long frecuenciaId,
             @RequestParam String fecha) {
         
-        List<VentasDtos.AsientoDisponibilidadDto> asientos = reservaService.obtenerAsientosDisponiblesPorFrecuencia(frecuenciaId, fecha);
-        return ResponseEntity.ok(asientos);
+        VentasDtos.AsientosViajeResponse response = reservaService.obtenerAsientosDisponiblesPorFrecuencia(frecuenciaId, fecha);
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/cooperativa/{cooperativaId}")

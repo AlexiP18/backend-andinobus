@@ -39,6 +39,10 @@ public class AsientoLayout {
 
     @Column(nullable = false)
     @Builder.Default
+    private Integer piso = 1; // 1 = Piso 1, 2 = Piso 2 (solo para buses con dos niveles)
+
+    @Column(nullable = false)
+    @Builder.Default
     private Boolean habilitado = true;
 
     @Column(name = "created_at", nullable = false)

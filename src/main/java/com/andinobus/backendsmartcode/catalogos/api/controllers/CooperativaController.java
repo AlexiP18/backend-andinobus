@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Profile("dev")
 @RestController
-@RequestMapping("/cooperativas")
+@RequestMapping("/api/cooperativas")
 public class CooperativaController {
 
     private final CooperativaService service;

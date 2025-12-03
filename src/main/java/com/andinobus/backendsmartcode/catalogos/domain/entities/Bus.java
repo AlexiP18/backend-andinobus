@@ -44,9 +44,26 @@ public class Bus {
     @Builder.Default
     private Integer capacidadAsientos = 40; // Capacidad total de asientos del bus
 
+    @Column(name = "tiene_dos_niveles")
+    @Builder.Default
+    private Boolean tieneDosNiveles = false; // Indica si el bus tiene dos pisos
+
+    @Column(name = "capacidad_piso_1")
+    private Integer capacidadPiso1; // Capacidad de asientos en el piso 1
+
+    @Column(name = "capacidad_piso_2")
+    private Integer capacidadPiso2; // Capacidad de asientos en el piso 2
+
     @Column(nullable = false, length = 32)
     @Builder.Default
     private String estado = "DISPONIBLE"; // DISPONIBLE | EN_SERVICIO | MANTENIMIENTO | PARADA
+
+    /**
+     * Terminal base donde normalmente inicia operaciones el bus
+     */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "terminal_base_id")
+    private Terminal terminalBase;
 
     @Column(nullable = false)
     @Builder.Default
@@ -65,7 +82,20 @@ public class Bus {
         if (updatedAt == null) updatedAt = now;
         if (activo == null) activo = true;
         if (estado == null) estado = "DISPONIBLE";
+        if (tieneDosNiveles == null) tieneDosNiveles = false;
         if (capacidadAsientos == null) capacidadAsientos = 40;
+        
+        // Si tiene dos niveles, validar que las capacidades de cada piso estén definidas
+        if (tieneDosNiveles && (capacidadPiso1 == null || capacidadPiso2 == null)) {
+            capacidadPiso1 = capacidadAsientos / 2;
+            capacidadPiso2 = capacidadAsientos - capacidadPiso1;
+        }
+        
+        // Si no tiene dos niveles, toda la capacidad es del piso 1
+        if (!tieneDosNiveles) {
+            capacidadPiso1 = capacidadAsientos;
+            capacidadPiso2 = 0;
+        }
     }
 
     @PreUpdate

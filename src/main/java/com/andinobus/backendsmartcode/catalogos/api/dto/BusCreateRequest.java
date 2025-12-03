@@ -22,5 +22,13 @@ public class BusCreateRequest {
     @Size(max = 500)
     private String fotoUrl;
 
+    private Integer capacidadAsientos = 40;
+    
+    private Boolean tieneDosNiveles = false;
+    
+    private Integer capacidadPiso1;
+    
+    private Integer capacidadPiso2;
+
     private Boolean activo = true;
 }

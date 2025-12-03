@@ -53,4 +53,16 @@ public class FrecuenciaViajeController {
         frecuenciaService.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    /**
+     * Elimina TODAS las frecuencias de una cooperativa
+     */
+    @DeleteMapping("/cooperativa/{cooperativaId}/all")
+    public ResponseEntity<java.util.Map<String, Object>> deleteAllFrecuencias(@PathVariable Long cooperativaId) {
+        int count = frecuenciaService.deleteAllByCooperativa(cooperativaId);
+        return ResponseEntity.ok(java.util.Map.of(
+            "message", "Frecuencias eliminadas correctamente",
+            "count", count
+        ));
+    }
 }

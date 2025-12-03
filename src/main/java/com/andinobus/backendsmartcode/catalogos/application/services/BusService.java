@@ -37,6 +37,10 @@ public class BusService {
                 .chasisMarca(req.getChasisMarca())
                 .carroceriaMarca(req.getCarroceriaMarca())
                 .fotoUrl(req.getFotoUrl())
+                .capacidadAsientos(req.getCapacidadAsientos() != null ? req.getCapacidadAsientos() : 40)
+                .tieneDosNiveles(req.getTieneDosNiveles() != null ? req.getTieneDosNiveles() : false)
+                .capacidadPiso1(req.getCapacidadPiso1())
+                .capacidadPiso2(req.getCapacidadPiso2())
                 .activo(req.getActivo() == null ? true : req.getActivo())
                 .build();
         bus = busRepository.save(bus);
@@ -74,6 +78,9 @@ public class BusService {
                 .carroceriaMarca(request.getCarroceriaMarca())
                 .fotoUrl(request.getFotoUrl())
                 .capacidadAsientos(request.getCapacidadAsientos() != null ? request.getCapacidadAsientos() : 40)
+                .tieneDosNiveles(request.getTieneDosNiveles() != null ? request.getTieneDosNiveles() : false)
+                .capacidadPiso1(request.getCapacidadPiso1())
+                .capacidadPiso2(request.getCapacidadPiso2())
                 .estado(request.getEstado() != null ? request.getEstado() : "DISPONIBLE")
                 .activo(true)
                 .build();
@@ -100,6 +107,9 @@ public class BusService {
         if (request.getCarroceriaMarca() != null) bus.setCarroceriaMarca(request.getCarroceriaMarca());
         if (request.getFotoUrl() != null) bus.setFotoUrl(request.getFotoUrl());
         if (request.getCapacidadAsientos() != null) bus.setCapacidadAsientos(request.getCapacidadAsientos());
+        if (request.getTieneDosNiveles() != null) bus.setTieneDosNiveles(request.getTieneDosNiveles());
+        if (request.getCapacidadPiso1() != null) bus.setCapacidadPiso1(request.getCapacidadPiso1());
+        if (request.getCapacidadPiso2() != null) bus.setCapacidadPiso2(request.getCapacidadPiso2());
         if (request.getEstado() != null) bus.setEstado(request.getEstado());
         if (request.getActivo() != null) bus.setActivo(request.getActivo());
 
@@ -141,6 +151,9 @@ public class BusService {
                 .carroceriaMarca(bus.getCarroceriaMarca())
                 .fotoUrl(bus.getFotoUrl())
                 .capacidadAsientos(bus.getCapacidadAsientos())
+                .tieneDosNiveles(bus.getTieneDosNiveles())
+                .capacidadPiso1(bus.getCapacidadPiso1())
+                .capacidadPiso2(bus.getCapacidadPiso2())
                 .estado(bus.getEstado())
                 .activo(bus.getActivo())
                 .build();
@@ -155,6 +168,10 @@ public class BusService {
                 .chasisMarca(b.getChasisMarca())
                 .carroceriaMarca(b.getCarroceriaMarca())
                 .fotoUrl(b.getFotoUrl())
+                .capacidadAsientos(b.getCapacidadAsientos())
+                .tieneDosNiveles(b.getTieneDosNiveles())
+                .capacidadPiso1(b.getCapacidadPiso1())
+                .capacidadPiso2(b.getCapacidadPiso2())
                 .activo(b.getActivo())
                 .build();
     }

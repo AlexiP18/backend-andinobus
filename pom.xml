@@ -61,6 +61,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- OpenAPI (Swagger UI + annotations) -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+            <version>2.6.0</version>
+        </dependency>
+
         <!-- Dev and Lombok -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -138,6 +145,11 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <configuration>
+                    <!-- Explicitly set the main class to avoid resolution issues in some environments -->
+                    <mainClass>com.andinobus.backendsmartcode.BackendSmartcodeApplication</mainClass>
+                    <!-- Ensure DevTools restart is disabled when running via spring-boot:run to avoid zero-byte class races on Windows -->
+                    <jvmArguments>-Dspring.devtools.restart.enabled=false</jvmArguments>
+                    <!-- Keep Lombok out of repackaged fat-jar -->
                     <excludes>
                         <exclude>
                             <groupId>org.projectlombok</groupId>

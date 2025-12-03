@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @Profile("dev")
 @RestController
-@RequestMapping("/boletos")
+@RequestMapping("/api/boletos")
 @RequiredArgsConstructor
 public class BoletosController {
 

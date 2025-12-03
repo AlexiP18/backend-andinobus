@@ -19,6 +19,9 @@ public class BusDtos {
         private String carroceriaMarca;
         private String fotoUrl;
         private Integer capacidadAsientos;
+        private Boolean tieneDosNiveles;
+        private Integer capacidadPiso1;
+        private Integer capacidadPiso2;
         private String estado; // DISPONIBLE | EN_SERVICIO | MANTENIMIENTO | PARADA
     }
 
@@ -33,6 +36,9 @@ public class BusDtos {
         private String carroceriaMarca;
         private String fotoUrl;
         private Integer capacidadAsientos;
+        private Boolean tieneDosNiveles;
+        private Integer capacidadPiso1;
+        private Integer capacidadPiso2;
         private String estado;
         private Boolean activo;
     }
@@ -51,6 +57,9 @@ public class BusDtos {
         private String carroceriaMarca;
         private String fotoUrl;
         private Integer capacidadAsientos;
+        private Boolean tieneDosNiveles;
+        private Integer capacidadPiso1;
+        private Integer capacidadPiso2;
         private String estado;
         private Boolean activo;
     }

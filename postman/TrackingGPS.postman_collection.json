@@ -1,0 +1,289 @@
+{
+  "info": {
+    "_postman_id": "tracking-api-collection",
+    "name": "AndinaBus - Tracking GPS API",
+    "description": "Colección de endpoints para el sistema de tracking GPS en tiempo real",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Viajes Activos",
+      "item": [
+        {
+          "name": "Obtener Viajes Globales (Super Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/viajes/activos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "viajes", "activos"]
+            },
+            "description": "Obtiene todos los viajes activos del sistema. Solo accesible para Super Admin."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Viajes por Cooperativa",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/viajes/activos/cooperativa/:cooperativaId",
+              "host": ["{{base_url}}"],
+              "path": ["api", "viajes", "activos", "cooperativa", ":cooperativaId"],
+              "variable": [
+                {
+                  "key": "cooperativaId",
+                  "value": "1",
+                  "description": "ID de la cooperativa"
+                }
+              ]
+            },
+            "description": "Obtiene viajes activos de una cooperativa específica. Accesible para Admin de Cooperativa y Super Admin."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Viajes de Cliente",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/viajes/activos/cliente?email={{email}}",
+              "host": ["{{base_url}}"],
+              "path": ["api", "viajes", "activos", "cliente"],
+              "query": [
+                {
+                  "key": "email",
+                  "value": "{{email}}",
+                  "description": "Email del cliente"
+                }
+              ]
+            },
+            "description": "Obtiene viajes activos de un cliente basado en sus boletos comprados. Solo accesible para el Cliente."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Detalle de Viaje",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/viajes/:viajeId/detalle",
+              "host": ["{{base_url}}"],
+              "path": ["api", "viajes", ":viajeId", "detalle"],
+              "variable": [
+                {
+                  "key": "viajeId",
+                  "value": "1",
+                  "description": "ID del viaje"
+                }
+              ]
+            },
+            "description": "Obtiene información detallada de un viaje específico."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Tracking GPS",
+      "item": [
+        {
+          "name": "Actualizar Posición (Chofer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"latitud\": -0.1807,\n  \"longitud\": -78.4678,\n  \"velocidadKmh\": 65.5,\n  \"precision\": 10.0,\n  \"provider\": \"gps\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/tracking/viajes/:viajeId/posicion",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tracking", "viajes", ":viajeId", "posicion"],
+              "variable": [
+                {
+                  "key": "viajeId",
+                  "value": "1",
+                  "description": "ID del viaje"
+                }
+              ]
+            },
+            "description": "Actualiza la posición GPS actual del viaje. Solo accesible para el Chofer asignado al viaje."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Historial de Posiciones",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tracking/viajes/:viajeId/posiciones?desde=2025-11-27T00:00:00",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tracking", "viajes", ":viajeId", "posiciones"],
+              "query": [
+                {
+                  "key": "desde",
+                  "value": "2025-11-27T00:00:00",
+                  "description": "Fecha/hora desde (opcional)"
+                }
+              ],
+              "variable": [
+                {
+                  "key": "viajeId",
+                  "value": "1",
+                  "description": "ID del viaje"
+                }
+              ]
+            },
+            "description": "Obtiene el historial de posiciones GPS del viaje. Accesible para Cliente (con boleto), Admin Cooperativa y Super Admin."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener Posición Actual",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tracking/viajes/:viajeId/posicion-actual",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tracking", "viajes", ":viajeId", "posicion-actual"],
+              "variable": [
+                {
+                  "key": "viajeId",
+                  "value": "1",
+                  "description": "ID del viaje"
+                }
+              ]
+            },
+            "description": "Obtiene la última posición GPS registrada del viaje."
+          },
+          "response": []
+        },
+        {
+          "name": "Iniciar Viaje Manualmente (Chofer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tracking/viajes/:viajeId/iniciar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tracking", "viajes", ":viajeId", "iniciar"],
+              "variable": [
+                {
+                  "key": "viajeId",
+                  "value": "1",
+                  "description": "ID del viaje"
+                }
+              ]
+            },
+            "description": "Inicia un viaje manualmente. Solo accesible para el Chofer asignado."
+          },
+          "response": []
+        },
+        {
+          "name": "Finalizar Viaje (Chofer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{token}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/api/tracking/viajes/:viajeId/finalizar",
+              "host": ["{{base_url}}"],
+              "path": ["api", "tracking", "viajes", ":viajeId", "finalizar"],
+              "variable": [
+                {
+                  "key": "viajeId",
+                  "value": "1",
+                  "description": "ID del viaje"
+                }
+              ]
+            },
+            "description": "Finaliza un viaje manualmente. Solo accesible para el Chofer asignado."
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "email",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

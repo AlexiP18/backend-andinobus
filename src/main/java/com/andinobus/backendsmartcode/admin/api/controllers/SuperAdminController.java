@@ -49,4 +49,40 @@ public class SuperAdminController {
         SuperAdminDtos.CooperativaDetalleResponse detalle = superAdminStatsService.getCooperativaDetalle(id);
         return ResponseEntity.ok(detalle);
     }
+
+    /**
+     * Activar o desactivar una cooperativa
+     */
+    @PatchMapping("/cooperativas/{id}/toggle-estado")
+    public ResponseEntity<Void> toggleCooperativaEstado(
+            @PathVariable Long id,
+            @RequestParam boolean activo
+    ) {
+        log.info("PATCH /api/admin/cooperativas/{}/toggle-estado?activo={}", id, activo);
+        superAdminStatsService.toggleCooperativaEstado(id, activo);
+        return ResponseEntity.ok().build();
+    }
+
+    /**
+     * Obtener lista de todos los clientes
+     */
+    @GetMapping("/clientes")
+    public ResponseEntity<List<SuperAdminDtos.ClienteInfo>> getAllClientes() {
+        log.info("GET /api/admin/clientes - Obteniendo lista de clientes");
+        List<SuperAdminDtos.ClienteInfo> clientes = superAdminStatsService.getAllClientes();
+        return ResponseEntity.ok(clientes);
+    }
+
+    /**
+     * Activar o desactivar un cliente
+     */
+    @PatchMapping("/clientes/{id}/toggle-estado")
+    public ResponseEntity<Void> toggleClienteEstado(
+            @PathVariable Long id,
+            @RequestParam boolean activo
+    ) {
+        log.info("PATCH /api/admin/clientes/{}/toggle-estado?activo={}", id, activo);
+        superAdminStatsService.toggleClienteEstado(id, activo);
+        return ResponseEntity.ok().build();
+    }
 }

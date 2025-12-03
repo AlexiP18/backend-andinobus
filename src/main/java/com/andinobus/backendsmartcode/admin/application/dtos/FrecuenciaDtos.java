@@ -36,6 +36,14 @@ public class FrecuenciaDtos {
         private String observaciones;
         private Boolean activo;
         private List<ParadaResponse> paradas;
+        
+        // Nuevos campos para tipo de frecuencia y rotación
+        private String tipoFrecuencia; // INTERPROVINCIAL, INTRAPROVINCIAL
+        private Integer tiempoMinimoEsperaMinutos;
+        private Boolean requiereBusEnTerminal;
+        private Long terminalOrigenId;
+        private Long terminalDestinoId;
+        private String estado;
     }
 
     @Data

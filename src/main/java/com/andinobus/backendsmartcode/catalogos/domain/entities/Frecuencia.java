@@ -34,7 +34,7 @@ public class Frecuencia {
     @Column(name = "duracion_estimada_min")
     private Integer duracionEstimadaMin;
 
-    @Column(name = "dias_operacion", length = 32)
+    @Column(name = "dias_operacion", length = 100)
     private String diasOperacion;
 
     @Column(name = "activa", nullable = false)

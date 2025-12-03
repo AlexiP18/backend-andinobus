@@ -101,4 +101,10 @@ public interface ViajeRepository extends JpaRepository<Viaje, Long> {
             @Param("fechaInicio") LocalDate fechaInicio,
             @Param("fechaFin") LocalDate fechaFin
     );
+
+    /**
+     * Buscar todos los viajes de un chofer para una fecha (para cálculo de horas)
+     */
+    @Query("SELECT v FROM Viaje v WHERE v.chofer.id = :choferId AND v.fecha = :fecha AND v.estado != 'CANCELADO'")
+    List<Viaje> findByChoferIdAndFecha(@Param("choferId") Long choferId, @Param("fecha") LocalDate fecha);
 }

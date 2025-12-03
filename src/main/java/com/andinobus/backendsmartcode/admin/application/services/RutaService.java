@@ -3,6 +3,7 @@ package com.andinobus.backendsmartcode.admin.application.services;
 import com.andinobus.backendsmartcode.admin.api.dto.RutaDtos.*;
 import com.andinobus.backendsmartcode.admin.domain.entities.Ruta;
 import com.andinobus.backendsmartcode.admin.domain.repositories.RutaRepository;
+import com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.CaminoRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 public class RutaService {
 
     private final RutaRepository rutaRepository;
+    private final CaminoRepository caminoRepository;
 
     @Transactional(readOnly = true)
     public List<RutaResponse> getAllRutas() {
@@ -37,6 +39,13 @@ public class RutaService {
     @Transactional(readOnly = true)
     public List<RutaResponse> getRutasAprobadas() {
         return rutaRepository.findByActivoTrueAndAprobadaAntTrue().stream()
+                .map(this::toResponse)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public List<RutaResponse> getRutasByTipo(String tipoRuta) {
+        return rutaRepository.findByActivoTrueAndTipoRuta(tipoRuta).stream()
                 .map(this::toResponse)
                 .collect(Collectors.toList());
     }
@@ -113,6 +122,9 @@ public class RutaService {
     }
 
     private RutaResponse toResponse(Ruta ruta) {
+        // Contar caminos activos asociados a la ruta
+        int cantidadCaminos = caminoRepository.findByRutaIdAndActivoTrue(ruta.getId()).size();
+        
         return RutaResponse.builder()
                 .id(ruta.getId())
                 .nombre(ruta.getNombre())
@@ -127,6 +139,12 @@ public class RutaService {
                 .vigenciaHasta(ruta.getVigenciaHasta())
                 .observacionesAnt(ruta.getObservacionesAnt())
                 .activo(ruta.getActivo())
+                .tipoRuta(ruta.getTipoRuta())
+                .terminalOrigenId(ruta.getTerminalOrigen() != null ? ruta.getTerminalOrigen().getId() : null)
+                .terminalDestinoId(ruta.getTerminalDestino() != null ? ruta.getTerminalDestino().getId() : null)
+                .terminalOrigenNombre(ruta.getTerminalOrigen() != null ? ruta.getTerminalOrigen().getNombre() : null)
+                .terminalDestinoNombre(ruta.getTerminalDestino() != null ? ruta.getTerminalDestino().getNombre() : null)
+                .cantidadCaminos(cantidadCaminos)
                 .build();
     }
 }

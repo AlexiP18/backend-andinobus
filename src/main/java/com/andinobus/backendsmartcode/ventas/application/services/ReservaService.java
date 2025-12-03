@@ -1,6 +1,8 @@
 package com.andinobus.backendsmartcode.ventas.application.services;
 
 import com.andinobus.backendsmartcode.admin.domain.repositories.FrecuenciaViajeRepository;
+import com.andinobus.backendsmartcode.catalogos.domain.entities.Frecuencia;
+import com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.FrecuenciaRepository;
 import com.andinobus.backendsmartcode.operacion.domain.entities.Viaje;
 import com.andinobus.backendsmartcode.operacion.domain.entities.ViajeAsiento;
 import com.andinobus.backendsmartcode.operacion.domain.repositories.ViajeAsientoRepository;
@@ -32,6 +34,7 @@ public class ReservaService {
     private final ViajeRepository viajeRepository;
     private final ViajeAsientoRepository viajeAsientoRepository;
     private final FrecuenciaViajeRepository frecuenciaViajeRepository;
+    private final FrecuenciaRepository frecuenciaRepository;
     private final com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.AsientoLayoutRepository asientoLayoutRepository;
 
     private static final int EXPIRATION_MINUTES = 15;
@@ -225,72 +228,211 @@ public class ReservaService {
 
     @Transactional(readOnly = true)
     public List<VentasDtos.AsientoDisponibilidadDto> obtenerAsientosDisponibles(Long viajeId) {
-        List<ViajeAsiento> asientos = viajeAsientoRepository.findByViajeId(viajeId);
+        // Obtener el viaje para acceder al bus
+        Viaje viaje = viajeRepository.findById(viajeId)
+                .orElseThrow(() -> new NotFoundException("Viaje no encontrado"));
         
-        // Obtener el layout del bus para mapear número de asiento a fila/columna
-        if (asientos.isEmpty()) {
-            return List.of();
-        }
+        Long busId = viaje.getBus().getId();
         
-        Long busId = asientos.get(0).getViaje().getBus().getId();
+        // Obtener TODOS los asientos del layout del bus (habilitados y deshabilitados)
         List<com.andinobus.backendsmartcode.catalogos.domain.entities.AsientoLayout> layoutAsientos = 
             asientoLayoutRepository.findByBusIdOrderByNumeroAsientoAsc(busId);
         
-        // Crear un mapa para acceso rápido: numeroAsiento -> AsientoLayout
-        var layoutMap = layoutAsientos.stream()
+        if (layoutAsientos.isEmpty()) {
+            return List.of();
+        }
+        
+        // Obtener los asientos del viaje (solo los habilitados tienen ViajeAsiento)
+        List<ViajeAsiento> viajeAsientos = viajeAsientoRepository.findByViajeId(viajeId);
+        
+        // Crear un mapa para acceso rápido: numeroAsiento -> ViajeAsiento
+        var viajeAsientoMap = viajeAsientos.stream()
             .collect(Collectors.toMap(
-                a -> String.valueOf(a.getNumeroAsiento()),
+                ViajeAsiento::getNumeroAsiento,
                 a -> a
             ));
         
-        return asientos.stream()
-                .map(asiento -> {
-                    var layout = layoutMap.get(asiento.getNumeroAsiento());
+        // Retornar TODOS los asientos del layout, marcando los deshabilitados como BLOQUEADO
+        return layoutAsientos.stream()
+                .map(layout -> {
+                    String numeroAsiento = String.valueOf(layout.getNumeroAsiento());
+                    ViajeAsiento viajeAsiento = viajeAsientoMap.get(numeroAsiento);
+                    
+                    String estado;
+                    if (!layout.getHabilitado()) {
+                        // Asiento deshabilitado en el layout
+                        estado = "DESHABILITADO";
+                    } else if (viajeAsiento != null) {
+                        // Asiento tiene estado del viaje
+                        estado = viajeAsiento.getEstado();
+                    } else {
+                        // Asiento habilitado pero sin ViajeAsiento (disponible por defecto)
+                        estado = "DISPONIBLE";
+                    }
+                    
                     return VentasDtos.AsientoDisponibilidadDto.builder()
-                            .numeroAsiento(asiento.getNumeroAsiento())
-                            .tipoAsiento(asiento.getTipoAsiento())
-                            .estado(asiento.getEstado())
-                            .fila(layout != null ? layout.getFila() : null)
-                            .columna(layout != null ? layout.getColumna() : null)
+                            .numeroAsiento(numeroAsiento)
+                            .tipoAsiento(layout.getTipoAsiento())
+                            .estado(estado)
+                            .fila(layout.getFila())
+                            .columna(layout.getColumna())
+                            .piso(layout.getPiso())
                             .build();
                 })
                 .collect(Collectors.toList());
     }
 
-    @Transactional(readOnly = true)
-    public List<VentasDtos.AsientoDisponibilidadDto> obtenerAsientosDisponiblesPorFrecuencia(Long frecuenciaViajeId, String fechaStr) {
+    @Transactional
+    public VentasDtos.AsientosViajeResponse obtenerAsientosDisponiblesPorFrecuencia(Long frecuenciaViajeId, String fechaStr) {
         LocalDate fecha = LocalDate.parse(fechaStr);
         
-        // Obtener la FrecuenciaViaje para saber qué bus usar
+        // Verificar que la frecuencia de viaje existe (tabla frecuencia_viaje)
         com.andinobus.backendsmartcode.admin.domain.entities.FrecuenciaViaje frecuenciaViaje = 
             frecuenciaViajeRepository.findById(frecuenciaViajeId)
-                .orElseThrow(() -> new RuntimeException("FrecuenciaViaje no encontrada"));
+                .orElseThrow(() -> new NotFoundException("Frecuencia no encontrada con id: " + frecuenciaViajeId));
         
-        Long busId = frecuenciaViaje.getBus().getId();
+        // Obtener o crear la frecuencia de catálogo correspondiente
+        Frecuencia frecuenciaCatalogo = obtenerOCrearFrecuenciaCatalogo(frecuenciaViaje);
         
-        // Buscar viajes para este bus y fecha
-        List<Viaje> viajes = viajeRepository.findByBusIdAndFecha(busId, fecha);
+        // Buscar viajes para esta frecuencia de catálogo y fecha
+        List<Viaje> viajes = viajeRepository.findByFrecuenciaIdAndFecha(frecuenciaCatalogo.getId(), fecha);
         
+        Long viajeId;
         if (viajes.isEmpty()) {
-            // No hay viaje creado aún, mostrar todos los asientos disponibles desde el layout
+            // Crear viaje automáticamente si no existe
+            log.info("Creando viaje automático para frecuencia {} en fecha {}", frecuenciaViajeId, fechaStr);
+            Viaje nuevoViaje = crearViajeAutomatico(frecuenciaViaje, frecuenciaCatalogo, fecha);
+            viajeId = nuevoViaje.getId();
+        } else {
+            // Si hay viaje(s), usar el primero
+            viajeId = viajes.get(0).getId();
+        }
+        
+        List<VentasDtos.AsientoDisponibilidadDto> asientos = obtenerAsientosDisponibles(viajeId);
+        
+        return VentasDtos.AsientosViajeResponse.builder()
+                .viajeId(viajeId)
+                .asientos(asientos)
+                .build();
+    }
+    
+    /**
+     * Crea un viaje automáticamente desde una FrecuenciaViaje
+     */
+    private Viaje crearViajeAutomatico(
+            com.andinobus.backendsmartcode.admin.domain.entities.FrecuenciaViaje frecuenciaViaje,
+            Frecuencia frecuenciaCatalogo,
+            LocalDate fecha) {
+        
+        java.time.LocalTime horaSalida = frecuenciaViaje.getHoraSalida() != null 
+                ? frecuenciaViaje.getHoraSalida() 
+                : java.time.LocalTime.of(8, 0);
+
+        Viaje nuevoViaje = Viaje.builder()
+                .frecuencia(frecuenciaCatalogo)
+                .bus(frecuenciaViaje.getBus())
+                .fecha(fecha)
+                .horaSalida(horaSalida)
+                .horaSalidaProgramada(horaSalida)
+                .estado("PROGRAMADO")
+                .build();
+
+        nuevoViaje = viajeRepository.save(nuevoViaje);
+        log.info("Viaje creado automáticamente: ID={}, FrecuenciaViaje={}, Fecha={}", 
+                nuevoViaje.getId(), frecuenciaViaje.getId(), fecha);
+
+        // Inicializar asientos del viaje desde el layout del bus
+        inicializarAsientosDesdeLayout(nuevoViaje);
+
+        return nuevoViaje;
+    }
+    
+    /**
+     * Inicializa los asientos de un viaje desde el layout del bus
+     */
+    private void inicializarAsientosDesdeLayout(Viaje viaje) {
+        try {
+            Long busId = viaje.getBus().getId();
             List<com.andinobus.backendsmartcode.catalogos.domain.entities.AsientoLayout> layoutAsientos = 
                 asientoLayoutRepository.findByBusIdOrderByNumeroAsientoAsc(busId);
             
-            return layoutAsientos.stream()
-                .filter(asiento -> asiento.getHabilitado())
-                .map(asiento -> VentasDtos.AsientoDisponibilidadDto.builder()
-                        .numeroAsiento(String.valueOf(asiento.getNumeroAsiento()))
-                        .tipoAsiento(asiento.getTipoAsiento())
-                        .estado("DISPONIBLE")
-                        .fila(asiento.getFila())
-                        .columna(asiento.getColumna())
-                        .build())
-                .collect(Collectors.toList());
+            if (layoutAsientos.isEmpty()) {
+                log.warn("Bus {} no tiene layout de asientos configurado, creando asientos por defecto", busId);
+                // Crear asientos por defecto basados en la capacidad
+                int capacidad = viaje.getBus().getCapacidadAsientos() != null 
+                        ? viaje.getBus().getCapacidadAsientos() 
+                        : 40;
+                for (int i = 1; i <= capacidad; i++) {
+                    ViajeAsiento asiento = ViajeAsiento.builder()
+                            .viaje(viaje)
+                            .numeroAsiento(String.valueOf(i))
+                            .tipoAsiento("NORMAL")
+                            .estado("DISPONIBLE")
+                            .build();
+                    viajeAsientoRepository.save(asiento);
+                }
+            } else {
+                // Crear asientos desde el layout (solo los habilitados)
+                for (var layout : layoutAsientos) {
+                    if (layout.getHabilitado()) {
+                        ViajeAsiento asiento = ViajeAsiento.builder()
+                                .viaje(viaje)
+                                .numeroAsiento(String.valueOf(layout.getNumeroAsiento()))
+                                .tipoAsiento(layout.getTipoAsiento())
+                                .estado("DISPONIBLE")
+                                .build();
+                        viajeAsientoRepository.save(asiento);
+                    }
+                }
+            }
+            log.info("Asientos inicializados para viaje {}", viaje.getId());
+        } catch (Exception e) {
+            log.error("Error inicializando asientos para viaje {}: {}", viaje.getId(), e.getMessage());
+        }
+    }
+    
+    /**
+     * Obtiene o crea una Frecuencia de catálogo desde una FrecuenciaViaje
+     */
+    private Frecuencia obtenerOCrearFrecuenciaCatalogo(
+            com.andinobus.backendsmartcode.admin.domain.entities.FrecuenciaViaje frecuenciaViaje) {
+        
+        String origen = frecuenciaViaje.getRuta().getOrigen();
+        String destino = frecuenciaViaje.getRuta().getDestino();
+        java.time.LocalTime horaSalida = frecuenciaViaje.getHoraSalida();
+        Long cooperativaId = frecuenciaViaje.getBus().getCooperativa().getId();
+        
+        // Buscar frecuencia existente
+        List<Frecuencia> frecuenciasExistentes = frecuenciaRepository.findAll().stream()
+                .filter(f -> f.getCooperativa().getId().equals(cooperativaId)
+                        && f.getOrigen().equals(origen)
+                        && f.getDestino().equals(destino)
+                        && f.getHoraSalida().equals(horaSalida))
+                .toList();
+        
+        if (!frecuenciasExistentes.isEmpty()) {
+            return frecuenciasExistentes.get(0);
         }
         
-        // Si hay viaje(s), obtener asientos del primero
-        Long viajeId = viajes.get(0).getId();
-        return obtenerAsientosDisponibles(viajeId);
+        // Crear nueva frecuencia de catálogo
+        String diasOperacion = frecuenciaViaje.getDiasOperacion();
+        if (diasOperacion != null && diasOperacion.length() > 32) {
+            diasOperacion = diasOperacion.substring(0, 32);
+        }
+        
+        Frecuencia nuevaFrecuencia = Frecuencia.builder()
+                .cooperativa(frecuenciaViaje.getBus().getCooperativa())
+                .origen(origen)
+                .destino(destino)
+                .horaSalida(horaSalida)
+                .diasOperacion(diasOperacion)
+                .activa(true)
+                .build();
+        
+        Frecuencia saved = frecuenciaRepository.save(nuevaFrecuencia);
+        log.info("Frecuencia de catálogo creada: ID={}, {}-{} {}", 
+                saved.getId(), origen, destino, horaSalida);
+        return saved;
     }
 
     @Transactional(readOnly = true)

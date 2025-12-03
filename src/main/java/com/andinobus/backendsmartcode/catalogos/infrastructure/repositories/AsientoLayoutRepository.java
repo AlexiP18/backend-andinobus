@@ -56,9 +56,41 @@ public interface AsientoLayoutRepository extends JpaRepository<AsientoLayout, Lo
     void deleteByBusId(Long busId);
 
     /**
+     * Elimina los asientos de un piso específico de un bus
+     */
+    @Modifying
+    @Transactional
+    @Query("DELETE FROM AsientoLayout a WHERE a.bus.id = :busId AND a.piso = :piso")
+    void deleteByBusIdAndPiso(@Param("busId") Long busId, @Param("piso") Integer piso);
+
+    /**
+     * Cuenta los asientos de un piso específico de un bus
+     */
+    @Query("SELECT COUNT(a) FROM AsientoLayout a WHERE a.bus.id = :busId AND a.piso = :piso")
+    Long countByBusIdAndPiso(@Param("busId") Long busId, @Param("piso") Integer piso);
+
+    /**
      * Encuentra los asientos habilitados de un bus
      */
     List<AsientoLayout> findByBusIdAndHabilitadoTrue(Long busId);
+
+    /**
+     * Obtiene el máximo número de asiento de un bus
+     */
+    @Query("SELECT MAX(a.numeroAsiento) FROM AsientoLayout a WHERE a.bus.id = :busId")
+    Integer findMaxNumeroAsientoByBusId(@Param("busId") Long busId);
+
+    /**
+     * Obtiene el máximo número de asiento de un piso específico de un bus
+     */
+    @Query("SELECT MAX(a.numeroAsiento) FROM AsientoLayout a WHERE a.bus.id = :busId AND a.piso = :piso")
+    Integer findMaxNumeroAsientoByBusIdAndPiso(@Param("busId") Long busId, @Param("piso") Integer piso);
+
+    /**
+     * Verifica si existe algún asiento con un número específico en un bus
+     */
+    @Query("SELECT COUNT(a) > 0 FROM AsientoLayout a WHERE a.bus.id = :busId AND a.numeroAsiento = :numero")
+    boolean existsByBusIdAndNumeroAsiento(@Param("busId") Long busId, @Param("numero") Integer numero);
 
     /**
      * Obtiene las dimensiones del grid (máxima fila y columna)

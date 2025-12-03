@@ -22,11 +22,17 @@ public class RutaController {
     private final RutaService rutaService;
 
     @GetMapping
-    public ResponseEntity<List<RutaResponse>> getAllRutas(@RequestParam(required = false) String filter) {
-        log.info("GET /api/admin/rutas - filter: {}", filter);
+    public ResponseEntity<List<RutaResponse>> getAllRutas(
+            @RequestParam(required = false) String filter,
+            @RequestParam(required = false) String tipoRuta) {
+        log.info("GET /api/admin/rutas - filter: {}, tipoRuta: {}", filter, tipoRuta);
         
         List<RutaResponse> rutas;
-        if ("activas".equals(filter)) {
+        
+        // Primero aplicar filtro por tipo de ruta si se especifica
+        if (tipoRuta != null && !tipoRuta.isEmpty()) {
+            rutas = rutaService.getRutasByTipo(tipoRuta.toUpperCase());
+        } else if ("activas".equals(filter)) {
             rutas = rutaService.getRutasActivas();
         } else if ("aprobadas".equals(filter)) {
             rutas = rutaService.getRutasAprobadas();

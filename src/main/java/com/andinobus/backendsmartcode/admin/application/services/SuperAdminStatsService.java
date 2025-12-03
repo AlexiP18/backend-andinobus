@@ -6,6 +6,8 @@ import com.andinobus.backendsmartcode.catalogos.domain.entities.Bus;
 import com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.CooperativaRepository;
 import com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.BusRepository;
 import com.andinobus.backendsmartcode.cooperativa.infrastructure.repositories.UsuarioCooperativaRepository;
+import com.andinobus.backendsmartcode.usuarios.domain.entities.AppUser;
+import com.andinobus.backendsmartcode.usuarios.domain.repositories.UserRepository;
 import com.andinobus.backendsmartcode.operacion.domain.entities.Viaje;
 import com.andinobus.backendsmartcode.operacion.domain.repositories.ViajeRepository;
 import com.andinobus.backendsmartcode.ventas.domain.entities.Reserva;
@@ -17,6 +19,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,6 +33,7 @@ public class SuperAdminStatsService {
     private final CooperativaRepository cooperativaRepository;
     private final BusRepository busRepository;
     private final UsuarioCooperativaRepository usuarioCooperativaRepository;
+    private final UserRepository userRepository;
     private final ViajeRepository viajeRepository;
     private final ReservaRepository reservaRepository;
 
@@ -194,5 +199,58 @@ public class SuperAdminStatsService {
                 .buses(buses)
                 .usuarios(usuarios)
                 .build();
+    }
+
+    /**
+     * Activa o desactiva una cooperativa
+     */
+    @Transactional
+    public void toggleCooperativaEstado(Long cooperativaId, boolean activo) {
+        log.info("Cambiando estado de cooperativa {} a {}", cooperativaId, activo ? "ACTIVA" : "INACTIVA");
+        
+        Cooperativa cooperativa = cooperativaRepository.findById(cooperativaId)
+                .orElseThrow(() -> new RuntimeException("Cooperativa no encontrada con ID: " + cooperativaId));
+        
+        cooperativa.setActivo(activo);
+        cooperativaRepository.save(cooperativa);
+        
+        log.info("Estado de cooperativa {} actualizado exitosamente", cooperativaId);
+    }
+
+    /**
+     * Obtiene la lista de todos los clientes
+     */
+    @Transactional(readOnly = true)
+    public List<SuperAdminDtos.ClienteInfo> getAllClientes() {
+        log.info("Obteniendo lista completa de clientes");
+        
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        
+        return userRepository.findAll().stream()
+                .map(cliente -> SuperAdminDtos.ClienteInfo.builder()
+                        .id(cliente.getId())
+                        .email(cliente.getEmail())
+                        .nombres(cliente.getNombres())
+                        .apellidos(cliente.getApellidos())
+                        .activo(cliente.getActivo())
+                        .createdAt(cliente.getCreatedAt() != null ? cliente.getCreatedAt().format(formatter) : "")
+                        .build())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * Activa o desactiva un cliente
+     */
+    @Transactional
+    public void toggleClienteEstado(Long clienteId, boolean activo) {
+        log.info("Cambiando estado de cliente {} a {}", clienteId, activo ? "ACTIVO" : "INACTIVO");
+        
+        AppUser cliente = userRepository.findById(clienteId)
+                .orElseThrow(() -> new RuntimeException("Cliente no encontrado con ID: " + clienteId));
+        
+        cliente.setActivo(activo);
+        userRepository.save(cliente);
+        
+        log.info("Estado de cliente {} actualizado exitosamente", clienteId);
     }
 }
