@@ -324,7 +324,9 @@ public class FrecuenciaViajeService {
                 .tiempoMinimoEsperaMinutos(frecuencia.getTiempoMinimoEsperaMinutos())
                 .requiereBusEnTerminal(frecuencia.getRequiereBusEnTerminal())
                 .terminalOrigenId(frecuencia.getTerminalOrigen() != null ? frecuencia.getTerminalOrigen().getId() : null)
+                .terminalOrigenNombre(frecuencia.getTerminalOrigen() != null ? frecuencia.getTerminalOrigen().getNombre() : null)
                 .terminalDestinoId(frecuencia.getTerminalDestino() != null ? frecuencia.getTerminalDestino().getId() : null)
+                .terminalDestinoNombre(frecuencia.getTerminalDestino() != null ? frecuencia.getTerminalDestino().getNombre() : null)
                 .estado(frecuencia.getEstado())
                 .build();
     }

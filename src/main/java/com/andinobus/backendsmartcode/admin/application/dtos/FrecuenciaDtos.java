@@ -42,7 +42,9 @@ public class FrecuenciaDtos {
         private Integer tiempoMinimoEsperaMinutos;
         private Boolean requiereBusEnTerminal;
         private Long terminalOrigenId;
+        private String terminalOrigenNombre;
         private Long terminalDestinoId;
+        private String terminalDestinoNombre;
         private String estado;
     }
 
