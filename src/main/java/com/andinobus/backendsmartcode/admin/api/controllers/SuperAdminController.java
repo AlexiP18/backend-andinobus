@@ -5,9 +5,11 @@ import com.andinobus.backendsmartcode.admin.application.services.SuperAdminStats
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
@@ -84,5 +86,18 @@ public class SuperAdminController {
         log.info("PATCH /api/admin/clientes/{}/toggle-estado?activo={}", id, activo);
         superAdminStatsService.toggleClienteEstado(id, activo);
         return ResponseEntity.ok().build();
+    }
+    
+    /**
+     * Obtener reporte de ventas globales (todas las cooperativas) por rango de fechas
+     */
+    @GetMapping("/reportes/ventas")
+    public ResponseEntity<SuperAdminDtos.ReporteVentasGlobalResponse> getReporteVentasGlobal(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaInicio,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fechaFin
+    ) {
+        log.info("GET /api/admin/reportes/ventas?fechaInicio={}&fechaFin={}", fechaInicio, fechaFin);
+        SuperAdminDtos.ReporteVentasGlobalResponse reporte = superAdminStatsService.getReporteVentasGlobal(fechaInicio, fechaFin);
+        return ResponseEntity.ok(reporte);
     }
 }

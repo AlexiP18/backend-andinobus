@@ -253,4 +253,52 @@ public class SuperAdminStatsService {
         
         log.info("Estado de cliente {} actualizado exitosamente", clienteId);
     }
+    
+    /**
+     * Obtiene el reporte de ventas globales (todas las cooperativas) para un rango de fechas
+     */
+    @Transactional(readOnly = true)
+    public SuperAdminDtos.ReporteVentasGlobalResponse getReporteVentasGlobal(LocalDate fechaInicio, LocalDate fechaFin) {
+        log.info("Generando reporte de ventas global desde {} hasta {}", fechaInicio, fechaFin);
+        
+        // Obtener ventas totales globales
+        java.math.BigDecimal ventasTotales = reservaRepository.sumVentasTotalesGlobal(fechaInicio, fechaFin);
+        if (ventasTotales == null) ventasTotales = java.math.BigDecimal.ZERO;
+        
+        long totalTransacciones = reservaRepository.countTransaccionesGlobal(fechaInicio, fechaFin);
+        
+        // Obtener ventas por día
+        List<Object[]> ventasPorDiaRaw = reservaRepository.findVentasPorDiaGlobal(fechaInicio, fechaFin);
+        List<SuperAdminDtos.VentaDiariaGlobal> ventasPorDia = ventasPorDiaRaw.stream()
+                .map(row -> SuperAdminDtos.VentaDiariaGlobal.builder()
+                        .fecha((LocalDate) row[0])
+                        .monto((java.math.BigDecimal) row[1])
+                        .transacciones(((Long) row[2]).intValue())
+                        .build())
+                .collect(Collectors.toList());
+        
+        // Obtener ventas por cooperativa
+        List<Object[]> ventasPorCooperativaRaw = reservaRepository.findVentasPorCooperativa(fechaInicio, fechaFin);
+        List<SuperAdminDtos.VentaCooperativa> ventasPorCooperativa = ventasPorCooperativaRaw.stream()
+                .map(row -> SuperAdminDtos.VentaCooperativa.builder()
+                        .cooperativaId((Long) row[0])
+                        .cooperativaNombre((String) row[1])
+                        .ventas((java.math.BigDecimal) row[2])
+                        .transacciones(((Long) row[3]).intValue())
+                        .build())
+                .collect(Collectors.toList());
+        
+        // Calcular ticket promedio
+        java.math.BigDecimal ticketPromedio = totalTransacciones > 0
+                ? ventasTotales.divide(java.math.BigDecimal.valueOf(totalTransacciones), 2, java.math.RoundingMode.HALF_UP)
+                : java.math.BigDecimal.ZERO;
+        
+        return SuperAdminDtos.ReporteVentasGlobalResponse.builder()
+                .ventasTotales(ventasTotales)
+                .totalTransacciones((int) totalTransacciones)
+                .ticketPromedio(ticketPromedio)
+                .ventasPorDia(ventasPorDia)
+                .ventasPorCooperativa(ventasPorCooperativa)
+                .build();
+    }
 }

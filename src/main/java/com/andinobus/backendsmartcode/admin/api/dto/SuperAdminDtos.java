@@ -104,4 +104,39 @@ public class SuperAdminDtos {
         private boolean activo;
         private String createdAt;
     }
+    
+    // ==================== DTOs para Reporte de Ventas Global ====================
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class ReporteVentasGlobalResponse {
+        private java.math.BigDecimal ventasTotales;
+        private int totalTransacciones;
+        private java.math.BigDecimal ticketPromedio;
+        private java.util.List<VentaDiariaGlobal> ventasPorDia;
+        private java.util.List<VentaCooperativa> ventasPorCooperativa;
+    }
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VentaDiariaGlobal {
+        private java.time.LocalDate fecha;
+        private java.math.BigDecimal monto;
+        private int transacciones;
+    }
+    
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class VentaCooperativa {
+        private Long cooperativaId;
+        private String cooperativaNombre;
+        private java.math.BigDecimal ventas;
+        private int transacciones;
+    }
 }

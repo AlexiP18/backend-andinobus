@@ -11,6 +11,7 @@ import com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.BusR
 import com.andinobus.backendsmartcode.cooperativa.api.dto.ReporteCooperativaDtos.*;
 import com.andinobus.backendsmartcode.operacion.domain.entities.Viaje;
 import com.andinobus.backendsmartcode.operacion.domain.repositories.ViajeRepository;
+import com.andinobus.backendsmartcode.ventas.domain.repositories.ReservaRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -37,6 +38,7 @@ public class ReporteCooperativaService {
     private final BusRepository busRepository;
     private final BusChoferRepository busChoferRepository;
     private final RutaRepository rutaRepository;
+    private final ReservaRepository reservaRepository;
 
     /**
      * Obtiene el resumen general de la cooperativa
@@ -102,27 +104,40 @@ public class ReporteCooperativaService {
     }
 
     /**
-     * Obtiene el reporte de ventas
+     * Obtiene el reporte de ventas REALES de la cooperativa
      */
     @Transactional(readOnly = true)
     public ReporteVentasResponse obtenerReporteVentas(Long cooperativaId, LocalDate fechaInicio, LocalDate fechaFin) {
-        log.info("Generando reporte de ventas para cooperativa {} desde {} hasta {}", 
+        log.info("Generando reporte de ventas REALES para cooperativa {} desde {} hasta {}", 
                 cooperativaId, fechaInicio, fechaFin);
         
-        List<FrecuenciaViaje> frecuencias = frecuenciaViajeRepository.findByBusCooperativaIdAndActivoTrue(cooperativaId);
+        // Obtener ventas reales desde reservas pagadas
+        BigDecimal ventasTotales = reservaRepository.sumVentasByCooperativaIdAndFechaRango(
+                cooperativaId, fechaInicio, fechaFin);
+        if (ventasTotales == null) ventasTotales = BigDecimal.ZERO;
         
-        // Generar ventas por día
-        List<VentaDiariaDto> ventasPorDia = generarVentasPorDia(frecuencias, fechaInicio, fechaFin);
+        long totalTransacciones = reservaRepository.countTransaccionesByCooperativaIdAndFechaRango(
+                cooperativaId, fechaInicio, fechaFin);
         
-        // Calcular totales
-        BigDecimal ventasTotales = ventasPorDia.stream()
-                .map(VentaDiariaDto::getMonto)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // Obtener ventas por día reales
+        List<Object[]> ventasPorDiaRaw = reservaRepository.findVentasPorDiaByCooperativaId(
+                cooperativaId, fechaInicio, fechaFin);
         
-        int totalTransacciones = ventasPorDia.stream()
-                .mapToInt(VentaDiariaDto::getTransacciones)
-                .sum();
+        List<VentaDiariaDto> ventasPorDia = new ArrayList<>();
+        for (Object[] row : ventasPorDiaRaw) {
+            LocalDate fecha = (LocalDate) row[0];
+            BigDecimal monto = (BigDecimal) row[1];
+            Long transacciones = (Long) row[2];
+            
+            ventasPorDia.add(VentaDiariaDto.builder()
+                    .fecha(fecha)
+                    .diaSemana(obtenerNombreDia(fecha.getDayOfWeek()))
+                    .monto(monto != null ? monto : BigDecimal.ZERO)
+                    .transacciones(transacciones != null ? transacciones.intValue() : 0)
+                    .build());
+        }
         
+        // Calcular promedios
         int diasEnRango = calcularDiasEnRango(fechaInicio, fechaFin);
         BigDecimal ventasDiarias = diasEnRango > 0 
                 ? ventasTotales.divide(BigDecimal.valueOf(diasEnRango), 2, RoundingMode.HALF_UP)
@@ -132,18 +147,61 @@ public class ReporteCooperativaService {
                 ? ventasTotales.divide(BigDecimal.valueOf(totalTransacciones), 2, RoundingMode.HALF_UP)
                 : BigDecimal.ZERO;
         
-        // Top rutas por ventas
-        List<RutaVentasDto> topRutas = generarTopRutasPorVentas(frecuencias, fechaInicio, fechaFin);
+        // Top rutas por ventas reales
+        List<Object[]> rutasVentasRaw = reservaRepository.findVentasPorRutaByCooperativaId(
+                cooperativaId, fechaInicio, fechaFin);
+        
+        List<RutaVentasDto> topRutas = new ArrayList<>();
+        for (Object[] row : rutasVentasRaw) {
+            String origen = (String) row[1];
+            String destino = (String) row[2];
+            BigDecimal ventas = (BigDecimal) row[3];
+            Long boletos = (Long) row[4];
+            
+            topRutas.add(RutaVentasDto.builder()
+                    .terminalOrigen(origen != null ? origen : "N/A")
+                    .terminalDestino(destino != null ? destino : "N/A")
+                    .ventas(ventas != null ? ventas : BigDecimal.ZERO)
+                    .boletos(boletos != null ? boletos.intValue() : 0)
+                    .build());
+        }
+        
+        // Calcular cambio de ventas (comparar con periodo anterior)
+        BigDecimal cambioVentas = calcularCambioVentas(cooperativaId, fechaInicio, fechaFin);
         
         return ReporteVentasResponse.builder()
                 .ventasTotales(ventasTotales)
-                .cambioVentas(BigDecimal.valueOf(12.5)) // Simulado
-                .totalTransacciones(totalTransacciones)
+                .cambioVentas(cambioVentas)
+                .totalTransacciones((int) totalTransacciones)
                 .ticketPromedio(ticketPromedio)
                 .ventasDiarias(ventasDiarias)
                 .ventasPorDia(ventasPorDia)
                 .topRutas(topRutas)
                 .build();
+    }
+    
+    /**
+     * Calcula el porcentaje de cambio de ventas respecto al periodo anterior
+     */
+    private BigDecimal calcularCambioVentas(Long cooperativaId, LocalDate fechaInicio, LocalDate fechaFin) {
+        int diasPeriodo = calcularDiasEnRango(fechaInicio, fechaFin);
+        LocalDate fechaInicioAnterior = fechaInicio.minusDays(diasPeriodo);
+        LocalDate fechaFinAnterior = fechaInicio.minusDays(1);
+        
+        BigDecimal ventasActuales = reservaRepository.sumVentasByCooperativaIdAndFechaRango(
+                cooperativaId, fechaInicio, fechaFin);
+        BigDecimal ventasAnteriores = reservaRepository.sumVentasByCooperativaIdAndFechaRango(
+                cooperativaId, fechaInicioAnterior, fechaFinAnterior);
+        
+        if (ventasActuales == null) ventasActuales = BigDecimal.ZERO;
+        if (ventasAnteriores == null || ventasAnteriores.compareTo(BigDecimal.ZERO) == 0) {
+            return ventasActuales.compareTo(BigDecimal.ZERO) > 0 ? BigDecimal.valueOf(100) : BigDecimal.ZERO;
+        }
+        
+        return ventasActuales.subtract(ventasAnteriores)
+                .divide(ventasAnteriores, 4, RoundingMode.HALF_UP)
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(1, RoundingMode.HALF_UP);
     }
 
     /**

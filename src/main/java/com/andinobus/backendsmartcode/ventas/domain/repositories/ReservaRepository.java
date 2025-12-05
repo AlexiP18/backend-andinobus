@@ -49,4 +49,96 @@ public interface ReservaRepository extends JpaRepository<Reserva, Long> {
            "WHERE f.cooperativa.id = :cooperativaId AND v.fecha = :fecha AND r.estado = 'PAGADO'")
     double sumTotalPagadoByCooperativaIdAndFecha(@Param("cooperativaId") Long cooperativaId,
                                                  @Param("fecha") java.time.LocalDate fecha);
+    
+    // ==================== QUERIES PARA REPORTES DE VENTAS REALES ====================
+    
+    /**
+     * Obtener ventas totales (monto) por cooperativa en un rango de fechas
+     */
+    @Query("SELECT COALESCE(SUM(r.monto), 0) FROM Reserva r JOIN r.viaje v JOIN v.frecuencia f " +
+           "WHERE f.cooperativa.id = :cooperativaId AND v.fecha BETWEEN :fechaInicio AND :fechaFin AND r.estado = 'PAGADO'")
+    java.math.BigDecimal sumVentasByCooperativaIdAndFechaRango(
+            @Param("cooperativaId") Long cooperativaId,
+            @Param("fechaInicio") java.time.LocalDate fechaInicio,
+            @Param("fechaFin") java.time.LocalDate fechaFin);
+    
+    /**
+     * Contar total de transacciones (reservas pagadas) por cooperativa en un rango de fechas
+     */
+    @Query("SELECT COUNT(r) FROM Reserva r JOIN r.viaje v JOIN v.frecuencia f " +
+           "WHERE f.cooperativa.id = :cooperativaId AND v.fecha BETWEEN :fechaInicio AND :fechaFin AND r.estado = 'PAGADO'")
+    long countTransaccionesByCooperativaIdAndFechaRango(
+            @Param("cooperativaId") Long cooperativaId,
+            @Param("fechaInicio") java.time.LocalDate fechaInicio,
+            @Param("fechaFin") java.time.LocalDate fechaFin);
+    
+    /**
+     * Obtener reservas pagadas por cooperativa agrupadas por fecha del viaje
+     */
+    @Query("SELECT v.fecha as fecha, COALESCE(SUM(r.monto), 0) as monto, COUNT(r) as transacciones " +
+           "FROM Reserva r JOIN r.viaje v JOIN v.frecuencia f " +
+           "WHERE f.cooperativa.id = :cooperativaId AND v.fecha BETWEEN :fechaInicio AND :fechaFin AND r.estado = 'PAGADO' " +
+           "GROUP BY v.fecha ORDER BY v.fecha")
+    List<Object[]> findVentasPorDiaByCooperativaId(
+            @Param("cooperativaId") Long cooperativaId,
+            @Param("fechaInicio") java.time.LocalDate fechaInicio,
+            @Param("fechaFin") java.time.LocalDate fechaFin);
+    
+    /**
+     * Obtener ventas por ruta (usando origen/destino de la Frecuencia) para una cooperativa en un rango de fechas
+     */
+    @Query("SELECT f.id as frecuenciaId, f.origen as origen, f.destino as destino, " +
+           "COALESCE(SUM(r.monto), 0) as ventas, COUNT(r) as boletos " +
+           "FROM Reserva r JOIN r.viaje v JOIN v.frecuencia f " +
+           "WHERE f.cooperativa.id = :cooperativaId AND v.fecha BETWEEN :fechaInicio AND :fechaFin AND r.estado = 'PAGADO' " +
+           "GROUP BY f.id, f.origen, f.destino " +
+           "ORDER BY COALESCE(SUM(r.monto), 0) DESC")
+    List<Object[]> findVentasPorRutaByCooperativaId(
+            @Param("cooperativaId") Long cooperativaId,
+            @Param("fechaInicio") java.time.LocalDate fechaInicio,
+            @Param("fechaFin") java.time.LocalDate fechaFin);
+    
+    // ==================== QUERIES PARA SUPERADMINISTRADOR (TODAS LAS COOPERATIVAS) ====================
+    
+    /**
+     * Obtener ventas totales de TODAS las cooperativas en un rango de fechas
+     */
+    @Query("SELECT COALESCE(SUM(r.monto), 0) FROM Reserva r JOIN r.viaje v " +
+           "WHERE v.fecha BETWEEN :fechaInicio AND :fechaFin AND r.estado = 'PAGADO'")
+    java.math.BigDecimal sumVentasTotalesGlobal(
+            @Param("fechaInicio") java.time.LocalDate fechaInicio,
+            @Param("fechaFin") java.time.LocalDate fechaFin);
+    
+    /**
+     * Contar total de transacciones globales en un rango de fechas
+     */
+    @Query("SELECT COUNT(r) FROM Reserva r JOIN r.viaje v " +
+           "WHERE v.fecha BETWEEN :fechaInicio AND :fechaFin AND r.estado = 'PAGADO'")
+    long countTransaccionesGlobal(
+            @Param("fechaInicio") java.time.LocalDate fechaInicio,
+            @Param("fechaFin") java.time.LocalDate fechaFin);
+    
+    /**
+     * Obtener ventas globales por día
+     */
+    @Query("SELECT v.fecha as fecha, COALESCE(SUM(r.monto), 0) as monto, COUNT(r) as transacciones " +
+           "FROM Reserva r JOIN r.viaje v " +
+           "WHERE v.fecha BETWEEN :fechaInicio AND :fechaFin AND r.estado = 'PAGADO' " +
+           "GROUP BY v.fecha ORDER BY v.fecha")
+    List<Object[]> findVentasPorDiaGlobal(
+            @Param("fechaInicio") java.time.LocalDate fechaInicio,
+            @Param("fechaFin") java.time.LocalDate fechaFin);
+    
+    /**
+     * Obtener ventas por cooperativa (para el superadmin)
+     */
+    @Query("SELECT f.cooperativa.id as cooperativaId, f.cooperativa.nombre as cooperativaNombre, " +
+           "COALESCE(SUM(r.monto), 0) as ventas, COUNT(r) as transacciones " +
+           "FROM Reserva r JOIN r.viaje v JOIN v.frecuencia f " +
+           "WHERE v.fecha BETWEEN :fechaInicio AND :fechaFin AND r.estado = 'PAGADO' " +
+           "GROUP BY f.cooperativa.id, f.cooperativa.nombre " +
+           "ORDER BY COALESCE(SUM(r.monto), 0) DESC")
+    List<Object[]> findVentasPorCooperativa(
+            @Param("fechaInicio") java.time.LocalDate fechaInicio,
+            @Param("fechaFin") java.time.LocalDate fechaFin);
 }
