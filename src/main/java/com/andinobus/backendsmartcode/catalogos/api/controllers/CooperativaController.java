@@ -10,7 +10,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-@Profile("dev")
 @RestController
 @RequestMapping("/api/cooperativas")
 public class CooperativaController {

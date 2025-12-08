@@ -21,7 +21,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Profile("dev")
 @RequiredArgsConstructor
 @Transactional
 public class ViajeService {

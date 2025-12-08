@@ -9,7 +9,6 @@ import org.springframework.scheduling.annotation.EnableAsync;
  * Usado principalmente para envío de emails sin bloquear la respuesta
  */
 @Configuration
-@Profile("dev")
 @EnableAsync
 public class AsyncConfig {
     // La configuración por defecto de Spring es suficiente para nuestro caso

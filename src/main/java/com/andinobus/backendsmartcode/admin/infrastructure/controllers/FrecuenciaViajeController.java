@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@Profile("dev")
 @RestController
 @RequestMapping("/api/admin/frecuencias")
 @RequiredArgsConstructor

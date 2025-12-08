@@ -13,7 +13,6 @@ import java.time.LocalDate;
 import java.util.List;
 
 @Slf4j
-@Profile("dev")
 @RestController
 @RequestMapping("/api/admin")
 @RequiredArgsConstructor

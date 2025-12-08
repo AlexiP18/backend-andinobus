@@ -15,7 +15,6 @@ import org.thymeleaf.context.Context;
 
 import java.util.Map;
 
-@Profile("dev")
 @Service
 @RequiredArgsConstructor
 @Slf4j

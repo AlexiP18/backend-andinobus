@@ -15,7 +15,6 @@ import com.andinobus.backendsmartcode.common.errors.NotFoundException;
 import java.util.List;
 
 @Slf4j
-@Profile("dev")
 @Service
 @RequiredArgsConstructor
 public class PagoService {

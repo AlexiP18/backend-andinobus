@@ -16,7 +16,6 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("/api/cooperativa/{cooperativaId}/viajes")
-@Profile("dev")
 @RequiredArgsConstructor
 public class ViajeController {
 

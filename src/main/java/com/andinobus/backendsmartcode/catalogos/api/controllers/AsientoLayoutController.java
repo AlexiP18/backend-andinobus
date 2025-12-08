@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/buses/{busId}/asientos")
-@Profile("dev")
 @RequiredArgsConstructor
 public class AsientoLayoutController {
 

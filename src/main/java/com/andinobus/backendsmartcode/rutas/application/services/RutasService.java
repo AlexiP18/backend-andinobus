@@ -20,7 +20,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Profile("dev")
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class RutasService {

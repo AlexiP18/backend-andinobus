@@ -10,7 +10,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Slf4j
-@Profile("dev")
 @Service
 @RequiredArgsConstructor
 public class ConfiguracionGlobalService {

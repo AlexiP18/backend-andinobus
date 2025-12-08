@@ -9,7 +9,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Slf4j
-@Profile("dev")
 @RestController
 @RequestMapping("/api/admin/configuracion")
 @RequiredArgsConstructor

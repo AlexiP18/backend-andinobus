@@ -11,7 +11,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @Slf4j
-@Profile("dev")
 @RestController
 @RequestMapping("/api/ubicacion")
 @RequiredArgsConstructor

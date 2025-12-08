@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
-@Profile("dev")
 @RequiredArgsConstructor
 public class RutasController {
 

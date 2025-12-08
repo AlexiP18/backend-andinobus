@@ -10,7 +10,6 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 @Repository
-@Profile("!dev")
 public interface FrecuenciaRepository extends JpaRepository<Frecuencia, Long> {
 
     /**

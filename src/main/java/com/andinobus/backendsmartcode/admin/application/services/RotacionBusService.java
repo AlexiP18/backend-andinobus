@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
  * 3. Se respetan tiempos de descanso según tipo de frecuencia (inter/intraprovincial)
  * 4. Se sigue el ciclo de rotación definido para la cooperativa
  */
-@Profile("dev")
 @Service
 @RequiredArgsConstructor
 @Slf4j

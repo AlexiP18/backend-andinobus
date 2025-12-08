@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Profile("dev")
 @RequiredArgsConstructor
 @Slf4j
 public class ViajeAsientoService {

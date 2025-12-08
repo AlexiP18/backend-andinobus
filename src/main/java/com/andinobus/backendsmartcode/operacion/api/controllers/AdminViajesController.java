@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 @RestController
-@Profile("dev")
 @RequiredArgsConstructor
 @RequestMapping("/admin")
 public class AdminViajesController {

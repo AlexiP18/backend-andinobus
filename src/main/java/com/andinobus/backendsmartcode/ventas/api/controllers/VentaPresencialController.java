@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
  */
 @RestController
 @RequestMapping("/api/ventas-presenciales")
-@Profile("dev")
 @RequiredArgsConstructor
 public class VentaPresencialController {
 

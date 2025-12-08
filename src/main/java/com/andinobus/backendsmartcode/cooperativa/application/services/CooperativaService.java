@@ -25,7 +25,6 @@ import java.util.Optional;
  * - Generación de hojas de trabajo
  */
 @Service("cooperativaOpsService")
-@Profile("dev")
 @RequiredArgsConstructor
 public class CooperativaService {
 

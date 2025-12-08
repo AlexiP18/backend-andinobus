@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/viajes")
-@Profile("dev")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
 public class ViajeAsientoController {

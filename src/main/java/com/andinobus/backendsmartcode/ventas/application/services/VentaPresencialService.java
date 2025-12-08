@@ -26,7 +26,6 @@ import java.util.List;
 import java.util.Locale;
 
 @Slf4j
-@Profile("dev")
 @Service
 @RequiredArgsConstructor
 public class VentaPresencialService {

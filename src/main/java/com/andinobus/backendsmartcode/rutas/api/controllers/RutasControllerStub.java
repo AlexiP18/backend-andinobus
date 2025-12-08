@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@Profile("!dev")
 public class RutasControllerStub {
 
     @GetMapping("/rutas/buscar")

@@ -20,7 +20,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
-@Profile("dev")
 public class ParadaService {
 
     private final ParadaRepository paradaRepository;

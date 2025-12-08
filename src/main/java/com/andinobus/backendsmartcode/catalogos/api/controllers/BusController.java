@@ -9,7 +9,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
-@Profile("dev")
 @RestController
 public class BusController {
 

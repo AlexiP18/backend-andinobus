@@ -18,7 +18,6 @@ import java.time.LocalDate;
 @RequestMapping("/api/cooperativa/{cooperativaId}/capacidad")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@Profile("dev")
 public class CapacidadOperativaController {
 
     private final CapacidadOperativaService capacidadService;

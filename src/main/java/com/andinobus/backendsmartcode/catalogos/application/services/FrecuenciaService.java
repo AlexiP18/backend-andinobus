@@ -21,7 +21,6 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 
 @Service
-@Profile("dev")
 public class FrecuenciaService {
 
     private final FrecuenciaRepository frecuenciaRepository;

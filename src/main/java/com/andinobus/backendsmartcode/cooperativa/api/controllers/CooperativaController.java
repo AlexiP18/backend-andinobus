@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/cooperativa")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "*")
-@Profile("dev")
 public class CooperativaController {
 
     private final CooperativaService cooperativaService;
