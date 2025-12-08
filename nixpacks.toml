@@ -1,0 +1,11 @@
+# Configuración de Nixpacks para Railway
+# Especifica JDK 21 para Spring Boot
+
+[phases.setup]
+nixPkgs = ["jdk21", "maven"]
+
+[phases.build]
+cmds = ["chmod +x mvnw", "./mvnw clean package -DskipTests"]
+
+[start]
+cmd = "java -Dserver.port=$PORT -Dspring.profiles.active=prod -jar target/*.jar"
