@@ -81,10 +81,10 @@ class VentasControllerTest {
 
         VentasDtos.BoletoResponse br = controller.emitir(emitirReq);
         assertEquals(rr.getId(), br.getReservaId());
-        assertNotNull(br.getCodigoBoleto());
+        assertNotNull(br.getCodigo());
 
-        VentasDtos.BoletoResponse fetched = controller.obtenerBoleto(br.getCodigoBoleto());
-        assertEquals(br.getCodigoBoleto(), fetched.getCodigoBoleto());
+        VentasDtos.BoletoResponse fetched = controller.obtenerBoleto(br.getCodigo());
+        assertEquals(br.getCodigo(), fetched.getCodigo());
     }
 
     @Test

@@ -21,9 +21,8 @@ class AuthControllerTest {
     void setUp() {
         controller = new AuthController(authService);
     }
-
     @Test
-    void loginCliente_delegatesToService() {
+    void login_delegatesToService() {
         AuthDtos.LoginRequest req = new AuthDtos.LoginRequest();
         req.setEmail("a@b.com");
         req.setPassword("pwd");
@@ -35,54 +34,12 @@ class AuthControllerTest {
                 .rol("CLIENTE")
                 .build();
 
-        when(authService.loginCliente(req)).thenReturn(resp);
-
-        AuthDtos.AuthResponse out = controller.loginCliente(req);
-
-        assertSame(resp, out);
-        verify(authService).loginCliente(req);
-    }
-
-    @Test
-    void loginCooperativa_delegatesToService() {
-        AuthDtos.LoginRequest req = new AuthDtos.LoginRequest();
-        req.setEmail("coop@b.com");
-        req.setPassword("pwd");
-
-        AuthDtos.AuthResponse resp = AuthDtos.AuthResponse.builder().token("t2").userId(2L).rol("COOPERATIVA").build();
-        when(authService.loginCooperativa(req)).thenReturn(resp);
-
-        AuthDtos.AuthResponse out = controller.loginCooperativa(req);
-        assertSame(resp, out);
-        verify(authService).loginCooperativa(req);
-    }
-
-    @Test
-    void loginAdmin_delegatesToService() {
-        AuthDtos.LoginRequest req = new AuthDtos.LoginRequest();
-        req.setEmail("admin@b.com");
-        req.setPassword("pwd");
-
-        AuthDtos.AuthResponse resp = AuthDtos.AuthResponse.builder().token("adm").userId(99L).rol("ADMIN").build();
-        when(authService.loginAdmin(req)).thenReturn(resp);
-
-        AuthDtos.AuthResponse out = controller.loginAdmin(req);
-        assertSame(resp, out);
-        verify(authService).loginAdmin(req);
-    }
-
-    @Test
-    void login_generic_delegatesToLoginCliente() {
-        AuthDtos.LoginRequest req = new AuthDtos.LoginRequest();
-        req.setEmail("x@b.com");
-        req.setPassword("pwd");
-
-        AuthDtos.AuthResponse resp = AuthDtos.AuthResponse.builder().token("g").userId(5L).rol("CLIENTE").build();
-        when(authService.loginCliente(req)).thenReturn(resp);
+        when(authService.login(req)).thenReturn(resp);
 
         AuthDtos.AuthResponse out = controller.login(req);
+
         assertSame(resp, out);
-        verify(authService).loginCliente(req);
+        verify(authService).login(req);
     }
 
     @Test
@@ -98,7 +55,6 @@ class AuthControllerTest {
         assertSame(resp, out);
         verify(authService).register(req);
     }
-
     @Test
     void me_usesDemoTokenIfPresent() {
         AuthDtos.MeResponse resp = AuthDtos.MeResponse.builder().userId(1L).email("u@b.com").rol("CLIENTE").build();
@@ -136,13 +92,5 @@ class AuthControllerTest {
     void logout_doesNotCallServiceWhenNoToken() {
         controller.logout(null);
         verify(authService, never()).logout(anyString());
-    }
-
-    @Test
-    void resetCooperativaPasswords_delegatesAndReturns() {
-        when(authService.resetCooperativaPasswords()).thenReturn("ok");
-        String out = controller.resetCooperativaPasswords();
-        assertEquals("ok", out);
-        verify(authService).resetCooperativaPasswords();
     }
 }
