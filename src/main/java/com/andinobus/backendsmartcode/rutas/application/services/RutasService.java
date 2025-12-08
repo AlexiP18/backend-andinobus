@@ -109,7 +109,25 @@ public class RutasService {
                     .collect(Collectors.toList());
         }
 
-        // 5. Crear items de respuesta
+        // 5. Filtrar frecuencias cuyos buses tengan viajes EN_RUTA o COMPLETADO para la fecha
+        final LocalDate fechaFiltro = fecha != null ? fecha : LocalDate.now();
+        frecuenciasViaje = frecuenciasViaje.stream()
+                .filter(fv -> {
+                    if (fv.getBus() == null) return true; // Si no tiene bus, no se puede verificar
+                    
+                    // Buscar viajes del bus para esta fecha
+                    List<Viaje> viajesDelBus = viajeRepository.findByBusIdAndFecha(fv.getBus().getId(), fechaFiltro);
+                    
+                    // Verificar si hay algún viaje EN_RUTA o COMPLETADO
+                    boolean tieneViajeNoDisponible = viajesDelBus.stream()
+                            .anyMatch(v -> "EN_RUTA".equals(v.getEstado()) || "COMPLETADO".equals(v.getEstado()));
+                    
+                    // Si tiene viaje no disponible, excluir esta frecuencia
+                    return !tieneViajeNoDisponible;
+                })
+                .collect(Collectors.toList());
+
+        // 6. Crear items de respuesta
         List<RutasDtos.SearchRouteItem> items = new ArrayList<>();
         for (FrecuenciaViaje fv : frecuenciasViaje) {
             // Obtener origen y destino
@@ -159,6 +177,8 @@ public class RutasService {
                     .asientosPorTipo(asientosPorTipo)
                     .fecha(fechaMostrar)
                     .precio(fv.getPrecioBase())
+                    .busPlaca(fv.getBus() != null ? fv.getBus().getPlaca() : null)
+                    .busMarca(fv.getBus() != null ? (fv.getBus().getCarroceriaMarca() != null ? fv.getBus().getCarroceriaMarca() : fv.getBus().getChasisMarca()) : null)
                     .build();
 
             items.add(item);

@@ -174,6 +174,7 @@ public class VentaPresencialService {
         Viaje nuevoViaje = Viaje.builder()
                 .frecuencia(frecuenciaCatalogo)
                 .bus(bus)
+                .chofer(frecuenciaViaje.getChofer()) // Asignar chofer de la frecuencia
                 .fecha(fecha)
                 .horaSalida(horaSalida)
                 .horaSalidaProgramada(horaSalida)

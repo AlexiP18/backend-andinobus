@@ -70,6 +70,12 @@ public interface ViajeRepository extends JpaRepository<Viaje, Long> {
     List<Viaje> findByChoferIdAndFechaAndEstadoActivo(@Param("choferId") Long choferId, @Param("fecha") LocalDate fecha);
     
     /**
+     * Buscar viaje activo de un bus para una fecha específica
+     */
+    @Query("SELECT v FROM Viaje v WHERE v.bus.id = :busId AND v.fecha = :fecha AND v.estado IN ('PROGRAMADO', 'EN_RUTA')")
+    List<Viaje> findByBusIdAndFechaAndEstadoActivo(@Param("busId") Long busId, @Param("fecha") LocalDate fecha);
+    
+    /**
      * Buscar viajes disponibles de una cooperativa por fecha
      */
     @Query("SELECT v FROM Viaje v " +

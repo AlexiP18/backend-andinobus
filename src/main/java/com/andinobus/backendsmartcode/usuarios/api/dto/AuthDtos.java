@@ -44,6 +44,10 @@ public class AuthDtos {
         private String cooperativaNombre; // Nombre de la cooperativa (solo si rol=COOPERATIVA)
         private String cedula;
         private String telefono;
+        
+        // Campos para confirmación de email
+        private String message;
+        private Boolean requiresConfirmation;
 
         // Aliases para compatibilidad con posibles expectativas del frontend
         @JsonProperty("role")
@@ -100,5 +104,20 @@ public class AuthDtos {
         }
         @JsonProperty("username")
         public String getUsername() { return email; }
+    }
+    
+    @Data
+    @Builder
+    public static class ConfirmacionResponse {
+        private boolean success;
+        private String message;
+        private String email;
+    }
+    
+    @Data
+    public static class ReenviarConfirmacionRequest {
+        @Email
+        @NotBlank
+        private String email;
     }
 }

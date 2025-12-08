@@ -1,6 +1,8 @@
 package com.andinobus.backendsmartcode.ventas.application.services;
 
 import com.andinobus.backendsmartcode.admin.domain.repositories.FrecuenciaViajeRepository;
+import com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.BusChoferRepository;
+import com.andinobus.backendsmartcode.catalogos.domain.entities.BusChofer;
 import com.andinobus.backendsmartcode.catalogos.domain.entities.Frecuencia;
 import com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.FrecuenciaRepository;
 import com.andinobus.backendsmartcode.operacion.domain.entities.Viaje;
@@ -36,22 +38,43 @@ public class ReservaService {
     private final FrecuenciaViajeRepository frecuenciaViajeRepository;
     private final FrecuenciaRepository frecuenciaRepository;
     private final com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.AsientoLayoutRepository asientoLayoutRepository;
+    private final BusChoferRepository busChoferRepository;
 
     private static final int EXPIRATION_MINUTES = 15;
     private static final BigDecimal PRECIO_BASE = new BigDecimal("25.00");
 
     @Transactional
     public VentasDtos.ReservaResponse crearReserva(VentasDtos.ReservaCreateRequest request, String clienteEmail) {
+        log.info("Creando reserva - ViajeId: {}, ClienteEmail: {}, Asientos: {}", 
+                request.getViajeId(), clienteEmail, request.getAsientos());
+        
         // 1. Validar que el viaje existe
+        if (request.getViajeId() == null) {
+            throw new RuntimeException("El ID del viaje es requerido");
+        }
+        
         Viaje viaje = viajeRepository.findById(request.getViajeId())
-                .orElseThrow(() -> new NotFoundException("Viaje no encontrado"));
+                .orElseThrow(() -> new NotFoundException("Viaje no encontrado con ID: " + request.getViajeId()));
 
+        log.info("Viaje encontrado - ID: {}, Estado: {}, Bus: {}", 
+                viaje.getId(), viaje.getEstado(), viaje.getBus() != null ? viaje.getBus().getPlaca() : "null");
+
+        // Solo permitir reservas en viajes PROGRAMADO (no iniciados)
         if (!"PROGRAMADO".equals(viaje.getEstado())) {
-            throw new RuntimeException("El viaje no está disponible para reservas");
+            if ("EN_RUTA".equals(viaje.getEstado())) {
+                throw new RuntimeException("VIAJE_INICIADO: El viaje ya ha iniciado y no se pueden realizar más reservas");
+            } else if ("COMPLETADO".equals(viaje.getEstado())) {
+                throw new RuntimeException("VIAJE_COMPLETADO: El viaje ya ha finalizado");
+            } else {
+                throw new RuntimeException("El viaje no está disponible para reservas (estado actual: " + viaje.getEstado() + ")");
+            }
         }
 
         // 2. Validar y reservar asientos
         List<String> numeroAsientos = request.getAsientos();
+        if (numeroAsientos == null || numeroAsientos.isEmpty()) {
+            throw new RuntimeException("Debe seleccionar al menos un asiento");
+        }
 
         List<ViajeAsiento> asientosReservados = new ArrayList<>();
         for (String numeroAsiento : numeroAsientos) {
@@ -328,9 +351,21 @@ public class ReservaService {
                 ? frecuenciaViaje.getHoraSalida() 
                 : java.time.LocalTime.of(8, 0);
 
+        // Determinar el chofer: primero de la frecuencia, si no, del bus
+        var chofer = frecuenciaViaje.getChofer();
+        if (chofer == null && frecuenciaViaje.getBus() != null) {
+            // Buscar chofer asignado al bus
+            List<BusChofer> asignaciones = busChoferRepository.findByBusIdAndActivoTrueOrderByOrdenAsc(frecuenciaViaje.getBus().getId());
+            if (!asignaciones.isEmpty()) {
+                chofer = asignaciones.get(0).getChofer();
+                log.info("Chofer {} asignado al viaje desde bus_chofer", chofer.getId());
+            }
+        }
+
         Viaje nuevoViaje = Viaje.builder()
                 .frecuencia(frecuenciaCatalogo)
                 .bus(frecuenciaViaje.getBus())
+                .chofer(chofer) // Asignar chofer de la frecuencia o del bus
                 .fecha(fecha)
                 .horaSalida(horaSalida)
                 .horaSalidaProgramada(horaSalida)
@@ -338,8 +373,9 @@ public class ReservaService {
                 .build();
 
         nuevoViaje = viajeRepository.save(nuevoViaje);
-        log.info("Viaje creado automáticamente: ID={}, FrecuenciaViaje={}, Fecha={}", 
-                nuevoViaje.getId(), frecuenciaViaje.getId(), fecha);
+        log.info("Viaje creado automáticamente: ID={}, FrecuenciaViaje={}, Fecha={}, Chofer={}", 
+                nuevoViaje.getId(), frecuenciaViaje.getId(), fecha, 
+                chofer != null ? chofer.getId() : "null");
 
         // Inicializar asientos del viaje desde el layout del bus
         inicializarAsientosDesdeLayout(nuevoViaje);

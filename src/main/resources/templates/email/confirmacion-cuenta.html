@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Confirma tu cuenta</title>
+</head>
+<body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f5f5f5;">
+    <table role="presentation" style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <td align="center" style="padding: 40px 0;">
+                <table role="presentation" style="width: 600px; border-collapse: collapse; background-color: #ffffff; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                    <!-- Header -->
+                    <tr>
+                        <td style="padding: 40px 40px 20px 40px; text-align: center; background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%); border-radius: 12px 12px 0 0;">
+                            <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">
+                                🚌 AndinoBus
+                            </h1>
+                            <p style="margin: 10px 0 0 0; color: rgba(255,255,255,0.9); font-size: 14px;">
+                                Sistema de Transporte Interprovincial
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Content -->
+                    <tr>
+                        <td style="padding: 40px;">
+                            <h2 style="margin: 0 0 20px 0; color: #1f2937; font-size: 24px; font-weight: 600;">
+                                ¡Hola, <span th:text="${nombres}">Usuario</span>! 👋
+                            </h2>
+                            
+                            <p style="margin: 0 0 20px 0; color: #4b5563; font-size: 16px; line-height: 1.6;">
+                                Gracias por registrarte en <strong>AndinoBus</strong>. Para completar tu registro y activar tu cuenta, por favor haz clic en el siguiente botón:
+                            </p>
+                            
+                            <!-- CTA Button -->
+                            <table role="presentation" style="width: 100%; border-collapse: collapse;">
+                                <tr>
+                                    <td align="center" style="padding: 20px 0;">
+                                        <a th:href="${confirmUrl}" 
+                                           style="display: inline-block; padding: 16px 40px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; font-size: 16px; font-weight: 600; border-radius: 8px; box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);">
+                                            ✅ Confirmar mi cuenta
+                                        </a>
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <p style="margin: 20px 0; color: #6b7280; font-size: 14px; line-height: 1.6;">
+                                Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:
+                            </p>
+                            
+                            <p style="margin: 0 0 20px 0; padding: 12px; background-color: #f3f4f6; border-radius: 6px; word-break: break-all;">
+                                <a th:href="${confirmUrl}" th:text="${confirmUrl}" style="color: #2563eb; text-decoration: none; font-size: 13px;">
+                                    Link de confirmación
+                                </a>
+                            </p>
+                            
+                            <div style="margin: 30px 0; padding: 20px; background-color: #fef3c7; border-radius: 8px; border-left: 4px solid #f59e0b;">
+                                <p style="margin: 0; color: #92400e; font-size: 14px;">
+                                    ⚠️ <strong>Importante:</strong> Este enlace expirará en 24 horas. Si no confirmas tu cuenta en este tiempo, deberás registrarte nuevamente.
+                                </p>
+                            </div>
+                            
+                            <p style="margin: 0; color: #6b7280; font-size: 14px;">
+                                Si no creaste una cuenta en AndinoBus, puedes ignorar este correo.
+                            </p>
+                        </td>
+                    </tr>
+                    
+                    <!-- Footer -->
+                    <tr>
+                        <td style="padding: 30px 40px; background-color: #f9fafb; border-radius: 0 0 12px 12px; text-align: center;">
+                            <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 13px;">
+                                © 2024 AndinoBus. Todos los derechos reservados.
+                            </p>
+                            <p style="margin: 0; color: #9ca3af; font-size: 12px;">
+                                Este es un correo automático, por favor no responder.
+                            </p>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

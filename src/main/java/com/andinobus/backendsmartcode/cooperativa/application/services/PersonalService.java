@@ -1,12 +1,16 @@
 package com.andinobus.backendsmartcode.cooperativa.application.services;
 
+import com.andinobus.backendsmartcode.catalogos.domain.entities.BusChofer;
 import com.andinobus.backendsmartcode.catalogos.domain.entities.Cooperativa;
+import com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.BusChoferRepository;
 import com.andinobus.backendsmartcode.catalogos.infrastructure.repositories.CooperativaRepository;
 import com.andinobus.backendsmartcode.cooperativa.api.dto.PersonalDtos;
 import com.andinobus.backendsmartcode.cooperativa.domain.enums.RolCooperativa;
 import com.andinobus.backendsmartcode.cooperativa.domain.entities.UsuarioCooperativa;
 import com.andinobus.backendsmartcode.cooperativa.infrastructure.repositories.UsuarioCooperativaRepository;
+import com.andinobus.backendsmartcode.email.EmailService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,11 +23,14 @@ import java.util.stream.Collectors;
 @Profile("dev")
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PersonalService {
 
     private final UsuarioCooperativaRepository usuarioCooperativaRepository;
     private final CooperativaRepository cooperativaRepository;
+    private final BusChoferRepository busChoferRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     @Transactional
     public PersonalDtos.PersonalResponse createPersonal(PersonalDtos.CreatePersonalRequest request) {
@@ -82,6 +89,40 @@ public class PersonalService {
         UsuarioCooperativa usuario = usuarioBuilder.build();
 
         UsuarioCooperativa savedUsuario = usuarioCooperativaRepository.save(usuario);
+        
+        // Enviar email de bienvenida según el rol
+        try {
+            if (rol == RolCooperativa.CHOFER || rol == RolCooperativa.OFICINISTA) {
+                // Para Chofer y Oficinista: email de bienvenida con credenciales
+                emailService.sendBienvenidaCooperativaEmail(
+                    savedUsuario.getEmail(),
+                    savedUsuario.getNombres(),
+                    savedUsuario.getApellidos(),
+                    rol.name(),
+                    cooperativa.getNombre(),
+                    cooperativa.getLogoUrl(),
+                    savedUsuario.getEmail(),
+                    request.getPassword() // Contraseña en texto plano
+                );
+                log.info("Email de bienvenida enviado a {} ({})", savedUsuario.getEmail(), rol.name());
+            } else if (rol == RolCooperativa.ADMIN) {
+                // Para Admin de Cooperativa: email notificando que contraseña es cédula
+                emailService.sendAdminCooperativaEmail(
+                    savedUsuario.getEmail(),
+                    savedUsuario.getNombres(),
+                    savedUsuario.getApellidos(),
+                    cooperativa.getNombre(),
+                    cooperativa.getLogoUrl(),
+                    savedUsuario.getEmail(),
+                    savedUsuario.getCedula()
+                );
+                log.info("Email de admin enviado a {} ({})", savedUsuario.getEmail(), rol.name());
+            }
+        } catch (Exception e) {
+            log.error("Error al enviar email a {}: {}", savedUsuario.getEmail(), e.getMessage());
+            // No fallar la creación si el email no se envía
+        }
+        
         return mapToResponse(savedUsuario);
     }
 
@@ -263,6 +304,21 @@ public class PersonalService {
     }
 
     private PersonalDtos.PersonalResponse mapToResponse(UsuarioCooperativa usuario) {
+        // Buscar bus asignado si es CHOFER
+        Long busAsignadoId = null;
+        String busAsignadoPlaca = null;
+        String busAsignadoNumeroInterno = null;
+        
+        if (usuario.getRolCooperativa() == RolCooperativa.CHOFER) {
+            List<BusChofer> asignaciones = busChoferRepository.findByChoferIdAndActivoTrue(usuario.getId());
+            if (!asignaciones.isEmpty()) {
+                BusChofer asignacion = asignaciones.get(0); // Tomar la primera asignación activa
+                busAsignadoId = asignacion.getBus().getId();
+                busAsignadoPlaca = asignacion.getBus().getPlaca();
+                busAsignadoNumeroInterno = asignacion.getBus().getNumeroInterno();
+            }
+        }
+        
         return PersonalDtos.PersonalResponse.builder()
                 .id(usuario.getId())
                 .cooperativaId(usuario.getCooperativa().getId())
@@ -282,6 +338,9 @@ public class PersonalService {
                         ? usuario.getFechaVencimientoLicencia().toString()
                         : null
                 )
+                .busAsignadoId(busAsignadoId)
+                .busAsignadoPlaca(busAsignadoPlaca)
+                .busAsignadoNumeroInterno(busAsignadoNumeroInterno)
                 .build();
     }
 

@@ -57,6 +57,14 @@ public class ViajeActivoDTO {
     private LocalDateTime horaInicioReal;
     private LocalDateTime horaFinReal;
 
+    // Coordenadas de terminales para mostrar la ruta en el mapa
+    private BigDecimal terminalOrigenLatitud;
+    private BigDecimal terminalOrigenLongitud;
+    private BigDecimal terminalDestinoLatitud;
+    private BigDecimal terminalDestinoLongitud;
+    private String terminalOrigenNombre;
+    private String terminalDestinoNombre;
+
     /**
      * Calcula el porcentaje de ocupación del bus
      */
@@ -72,6 +80,14 @@ public class ViajeActivoDTO {
      */
     public boolean tienePosicionActual() {
         return latitudActual != null && longitudActual != null;
+    }
+
+    /**
+     * Verifica si tiene coordenadas de terminales para mostrar la ruta
+     */
+    public boolean tieneCoordenasRuta() {
+        return terminalOrigenLatitud != null && terminalOrigenLongitud != null 
+            && terminalDestinoLatitud != null && terminalDestinoLongitud != null;
     }
 
     /**

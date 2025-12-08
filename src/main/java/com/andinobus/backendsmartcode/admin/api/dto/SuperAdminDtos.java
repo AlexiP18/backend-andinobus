@@ -31,6 +31,7 @@ public class SuperAdminDtos {
         private Long id;
         private String nombre;
         private String ruc;
+        private String logoUrl;
         private int cantidadBuses;
         private int cantidadPersonal;
         private boolean activo;

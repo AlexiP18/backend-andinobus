@@ -39,6 +39,10 @@ public class AppUser {
     @Builder.Default
     private Boolean activo = true;
     
+    @Column(name = "email_confirmado", nullable = false)
+    @Builder.Default
+    private Boolean emailConfirmado = false;
+    
     @Column(name = "created_at", nullable = false)
     @Builder.Default
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -53,6 +57,9 @@ public class AppUser {
         }
         if (rol == null) {
             rol = "CLIENTE";
+        }
+        if (emailConfirmado == null) {
+            emailConfirmado = false;
         }
     }
 }

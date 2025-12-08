@@ -24,4 +24,10 @@ public interface FrecuenciaViajeRepository extends JpaRepository<FrecuenciaViaje
     List<FrecuenciaViaje> findByCooperativaIdOrderByHoraSalida(@Param("cooperativaId") Long cooperativaId);
 
     boolean existsByBusIdAndRutaIdAndHoraSalidaAndActivoTrue(Long busId, Long rutaId, java.time.LocalTime horaSalida);
+
+    @Query("SELECT f FROM FrecuenciaViaje f WHERE f.bus.id IN :busIds AND f.activo = true ORDER BY f.horaSalida ASC")
+    List<FrecuenciaViaje> findByBusIdInAndActivoTrue(@Param("busIds") List<Long> busIds);
+
+    @Query("SELECT f FROM FrecuenciaViaje f WHERE f.chofer.id = :choferId AND f.activo = true ORDER BY f.horaSalida ASC")
+    List<FrecuenciaViaje> findByChoferIdAndActivoTrue(@Param("choferId") Long choferId);
 }

@@ -106,6 +106,7 @@ public class SuperAdminStatsService {
                             .id(coop.getId())
                             .nombre(coop.getNombre())
                             .ruc(coop.getRuc())
+                            .logoUrl(coop.getLogoUrl())
                             .cantidadBuses(cantidadBuses)
                             .cantidadPersonal(cantidadPersonal)
                             .activo(coop.getActivo())

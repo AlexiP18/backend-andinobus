@@ -48,7 +48,19 @@ public class BoletoService {
             throw new RuntimeException("La reserva debe estar pagada para generar el boleto");
         }
 
-        // 3. Generar código del boleto
+        // 3. Validar que el viaje no haya iniciado
+        String estadoViaje = reserva.getViaje().getEstado();
+        if ("EN_RUTA".equals(estadoViaje)) {
+            throw new RuntimeException("VIAJE_INICIADO: El viaje ya ha iniciado. No es posible emitir el boleto. Por favor, contacte a la cooperativa para solicitar un reembolso.");
+        }
+        if ("COMPLETADO".equals(estadoViaje)) {
+            throw new RuntimeException("VIAJE_FINALIZADO: El viaje ya ha finalizado. No es posible emitir el boleto.");
+        }
+        if ("CANCELADO".equals(estadoViaje)) {
+            throw new RuntimeException("VIAJE_CANCELADO: El viaje ha sido cancelado. Por favor, contacte a la cooperativa.");
+        }
+
+        // 4. Generar código del boleto
         String codigoBoleto = generarCodigoBoleto(reserva);
 
         // 4. Obtener información de asientos

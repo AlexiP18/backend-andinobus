@@ -22,6 +22,8 @@ public class RutasDtos {
         private Map<String, Integer> asientosPorTipo; // Normal/VIP → disponibles (mock)
         private String fecha; // Fecha del viaje (para ordenamiento)
         private Double precio; // Precio base del viaje
+        private String busPlaca; // Placa del bus asignado
+        private String busMarca; // Marca del bus
     }
 
     @Data

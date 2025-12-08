@@ -64,6 +64,10 @@ public class PersonalDtos {
         private String numeroLicencia;
         private String tipoLicencia;
         private String fechaVencimientoLicencia; // YYYY-MM-DD
+        // Bus asignado (solo para CHOFER)
+        private Long busAsignadoId;
+        private String busAsignadoPlaca;
+        private String busAsignadoNumeroInterno;
     }
 }
 

@@ -100,4 +100,22 @@ public class AuthController {
     public String resetCooperativaPasswords() {
         return authService.resetCooperativaPasswords();
     }
+    
+    /**
+     * Confirmar cuenta de cliente mediante token
+     * GET /api/auth/confirmar?token=xxx
+     */
+    @GetMapping("/auth/confirmar")
+    public AuthDtos.ConfirmacionResponse confirmarCuenta(@RequestParam String token) {
+        return authService.confirmarCuenta(token);
+    }
+    
+    /**
+     * Reenviar email de confirmación
+     * POST /api/auth/reenviar-confirmacion
+     */
+    @PostMapping("/auth/reenviar-confirmacion")
+    public AuthDtos.ConfirmacionResponse reenviarConfirmacion(@Valid @RequestBody AuthDtos.ReenviarConfirmacionRequest req) {
+        return authService.reenviarConfirmacion(req.getEmail());
+    }
 }

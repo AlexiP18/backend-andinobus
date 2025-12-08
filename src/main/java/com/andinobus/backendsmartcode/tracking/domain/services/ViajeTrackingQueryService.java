@@ -4,6 +4,8 @@ import com.andinobus.backendsmartcode.tracking.application.dto.ViajeActivoDTO;
 import com.andinobus.backendsmartcode.operacion.domain.entities.Viaje;
 import com.andinobus.backendsmartcode.operacion.domain.repositories.ViajeRepository;
 import com.andinobus.backendsmartcode.ventas.domain.repositories.ReservaRepository;
+import com.andinobus.backendsmartcode.catalogos.domain.entities.Terminal;
+import com.andinobus.backendsmartcode.catalogos.domain.repositories.TerminalRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -14,6 +16,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -28,6 +31,7 @@ public class ViajeTrackingQueryService {
 
     private final ViajeRepository viajeRepository;
     private final ReservaRepository reservaRepository;
+    private final TerminalRepository terminalRepository;
 
     /**
      * Obtiene todos los viajes activos del sistema
@@ -128,6 +132,75 @@ public class ViajeTrackingQueryService {
                 .mapToInt(r -> r.getAsientos() != null ? r.getAsientos() : 0)
                 .sum();
 
+        // Obtener coordenadas de terminales para la ruta
+        BigDecimal terminalOrigenLat = null;
+        BigDecimal terminalOrigenLon = null;
+        BigDecimal terminalDestinoLat = null;
+        BigDecimal terminalDestinoLon = null;
+        String terminalOrigenNombre = null;
+        String terminalDestinoNombre = null;
+
+        if (frecuencia != null) {
+            // Obtener nombres de origen y destino de la frecuencia
+            // Formato: "PROVINCIA|Canton|numero" -> extraemos el cantón (parte del medio)
+            String origenCompleto = frecuencia.getOrigen();
+            String destinoCompleto = frecuencia.getDestino();
+            
+            terminalOrigenNombre = extraerCantonDeRuta(origenCompleto);
+            terminalDestinoNombre = extraerCantonDeRuta(destinoCompleto);
+            
+            log.debug("Extrayendo cantones - Origen: '{}' -> '{}', Destino: '{}' -> '{}'", 
+                origenCompleto, terminalOrigenNombre, destinoCompleto, terminalDestinoNombre);
+            
+            // Buscar terminal de origen por nombre (cantón) para obtener coordenadas
+            if (terminalOrigenNombre != null) {
+                // Primero buscar por cantón (retorna lista, tomamos el primero)
+                List<Terminal> terminalesPorCanton = terminalRepository.findByCantonIgnoreCase(terminalOrigenNombre);
+                Optional<Terminal> terminalOrigen = terminalesPorCanton.isEmpty() 
+                    ? Optional.empty() 
+                    : Optional.of(terminalesPorCanton.get(0));
+                
+                if (terminalOrigen.isEmpty()) {
+                    // Intentar buscar por nombre del terminal si no se encuentra por cantón
+                    terminalOrigen = terminalRepository.findByNombreIgnoreCase(terminalOrigenNombre);
+                }
+                if (terminalOrigen.isPresent()) {
+                    Terminal term = terminalOrigen.get();
+                    if (term.getLatitud() != null && term.getLongitud() != null) {
+                        terminalOrigenLat = BigDecimal.valueOf(term.getLatitud());
+                        terminalOrigenLon = BigDecimal.valueOf(term.getLongitud());
+                        terminalOrigenNombre = term.getNombre(); // Usar nombre real del terminal
+                        log.debug("Terminal origen encontrado: {} -> lat={}, lon={}", 
+                            terminalOrigenNombre, terminalOrigenLat, terminalOrigenLon);
+                    }
+                }
+            }
+            
+            // Buscar terminal de destino por nombre (cantón) para obtener coordenadas
+            if (terminalDestinoNombre != null) {
+                // Primero buscar por cantón (retorna lista, tomamos el primero)
+                List<Terminal> terminalesPorCanton = terminalRepository.findByCantonIgnoreCase(terminalDestinoNombre);
+                Optional<Terminal> terminalDestino = terminalesPorCanton.isEmpty() 
+                    ? Optional.empty() 
+                    : Optional.of(terminalesPorCanton.get(0));
+                
+                if (terminalDestino.isEmpty()) {
+                    // Intentar buscar por nombre del terminal si no se encuentra por cantón
+                    terminalDestino = terminalRepository.findByNombreIgnoreCase(terminalDestinoNombre);
+                }
+                if (terminalDestino.isPresent()) {
+                    Terminal term = terminalDestino.get();
+                    if (term.getLatitud() != null && term.getLongitud() != null) {
+                        terminalDestinoLat = BigDecimal.valueOf(term.getLatitud());
+                        terminalDestinoLon = BigDecimal.valueOf(term.getLongitud());
+                        terminalDestinoNombre = term.getNombre(); // Usar nombre real del terminal
+                        log.debug("Terminal destino encontrado: {} -> lat={}, lon={}", 
+                            terminalDestinoNombre, terminalDestinoLat, terminalDestinoLon);
+                    }
+                }
+            }
+        }
+
         return ViajeActivoDTO.builder()
                 .id(viaje.getId())
                 .viajeId(viaje.getId())
@@ -161,6 +234,38 @@ public class ViajeTrackingQueryService {
                 // Tiempos reales
                 .horaInicioReal(viaje.getHoraInicioReal())
                 .horaFinReal(viaje.getHoraFinReal())
+                // Coordenadas de terminales para mostrar ruta en mapa
+                .terminalOrigenLatitud(terminalOrigenLat)
+                .terminalOrigenLongitud(terminalOrigenLon)
+                .terminalDestinoLatitud(terminalDestinoLat)
+                .terminalDestinoLongitud(terminalDestinoLon)
+                .terminalOrigenNombre(terminalOrigenNombre)
+                .terminalDestinoNombre(terminalDestinoNombre)
                 .build();
+    }
+    
+    /**
+     * Extrae el cantón de una ruta con formato "PROVINCIA|Canton|numero"
+     * Si el formato no coincide, retorna el string original
+     * 
+     * @param rutaCompleta La ruta en formato "PROVINCIA|Canton|numero"
+     * @return El cantón extraído o el string original si no tiene el formato esperado
+     */
+    private String extraerCantonDeRuta(String rutaCompleta) {
+        if (rutaCompleta == null || rutaCompleta.isEmpty()) {
+            return null;
+        }
+        
+        // Verificar si tiene el formato con pipes
+        if (rutaCompleta.contains("|")) {
+            String[] partes = rutaCompleta.split("\\|");
+            if (partes.length >= 2) {
+                // El cantón está en la segunda posición (índice 1)
+                return partes[1].trim();
+            }
+        }
+        
+        // Si no tiene el formato esperado, retornar el string original
+        return rutaCompleta.trim();
     }
 }

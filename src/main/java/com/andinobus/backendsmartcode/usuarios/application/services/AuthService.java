@@ -2,12 +2,16 @@ package com.andinobus.backendsmartcode.usuarios.application.services;
 
 import com.andinobus.backendsmartcode.cooperativa.domain.entities.UsuarioCooperativa;
 import com.andinobus.backendsmartcode.cooperativa.infrastructure.repositories.UsuarioCooperativaRepository;
+import com.andinobus.backendsmartcode.email.EmailService;
 import com.andinobus.backendsmartcode.usuarios.api.dto.AuthDtos;
 import com.andinobus.backendsmartcode.usuarios.domain.entities.AppUser;
+import com.andinobus.backendsmartcode.usuarios.domain.entities.ConfirmacionToken;
 import com.andinobus.backendsmartcode.usuarios.domain.entities.UserToken;
+import com.andinobus.backendsmartcode.usuarios.domain.repositories.ConfirmacionTokenRepository;
 import com.andinobus.backendsmartcode.usuarios.domain.repositories.UserRepository;
 import com.andinobus.backendsmartcode.usuarios.domain.repositories.UserTokenRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Profile;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -20,12 +24,15 @@ import java.util.UUID;
 @Profile("dev")
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AuthService {
     
     private final UserRepository userRepository;
     private final UserTokenRepository userTokenRepository;
     private final UsuarioCooperativaRepository usuarioCooperativaRepository;
+    private final ConfirmacionTokenRepository confirmacionTokenRepository;
     private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
 
     // Credenciales del administrador del sistema (hardcoded)
     @Value("${admin.email:admin@andinobus.com}")
@@ -41,7 +48,7 @@ public class AuthService {
             throw new RuntimeException("El email ya está registrado");
         }
         
-        // Crear nuevo usuario
+        // Crear nuevo usuario (email NO confirmado)
         AppUser user = AppUser.builder()
                 .email(req.getEmail())
                 .passwordHash(passwordEncoder.encode(req.getPassword()))
@@ -49,22 +56,42 @@ public class AuthService {
                 .apellidos(req.getApellidos())
                 .rol("CLIENTE")
                 .activo(true)
+                .emailConfirmado(false) // Pendiente de confirmación
                 .createdAt(LocalDateTime.now())
                 .build();
         
         // Guardar en BD
         user = userRepository.save(user);
         
-        // Generar y guardar token
-        String token = generateAndSaveToken(user.getId());
+        // Generar token de confirmación
+        String confirmToken = UUID.randomUUID().toString();
+        ConfirmacionToken tokenEntity = ConfirmacionToken.builder()
+                .token(confirmToken)
+                .userId(user.getId())
+                .userEmail(user.getEmail())
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusHours(24))
+                .build();
+        confirmacionTokenRepository.save(tokenEntity);
         
+        // Enviar email de confirmación
+        try {
+            emailService.sendConfirmacionCuentaEmail(user.getEmail(), user.getNombres(), confirmToken);
+            log.info("Email de confirmación enviado a: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Error al enviar email de confirmación a {}: {}", user.getEmail(), e.getMessage());
+            // No fallar el registro si el email no se envía
+        }
+        
+        // Retornar respuesta (sin token de sesión, debe confirmar primero)
         return AuthDtos.AuthResponse.builder()
-                .token(token)
                 .userId(user.getId())
                 .email(user.getEmail())
                 .rol(user.getRol())
                 .nombres(user.getNombres())
                 .apellidos(user.getApellidos())
+                .message("Registro exitoso. Por favor revisa tu correo para confirmar tu cuenta.")
+                .requiresConfirmation(true)
                 .build();
     }
     
@@ -85,6 +112,11 @@ public class AuthService {
         // Verificar que esté activo
         if (!user.getActivo()) {
             throw new RuntimeException("Usuario inactivo");
+        }
+        
+        // Verificar que el email esté confirmado
+        if (!Boolean.TRUE.equals(user.getEmailConfirmado())) {
+            throw new RuntimeException("Debes confirmar tu email antes de iniciar sesión. Revisa tu bandeja de entrada.");
         }
         
         // Generar y guardar token
@@ -322,5 +354,127 @@ public class AuthService {
     // Sobrecarga para mantener compatibilidad
     private String generateAndSaveToken(Long userId) {
         return generateAndSaveToken(userId, "CLIENTE");
+    }
+    
+    /**
+     * Confirmar cuenta de cliente mediante token
+     */
+    @Transactional
+    public AuthDtos.ConfirmacionResponse confirmarCuenta(String token) {
+        // Buscar el token
+        ConfirmacionToken confirmToken = confirmacionTokenRepository.findByToken(token)
+                .orElse(null);
+        
+        if (confirmToken == null) {
+            return AuthDtos.ConfirmacionResponse.builder()
+                    .success(false)
+                    .message("Token de confirmación inválido o no encontrado")
+                    .build();
+        }
+        
+        // Verificar si ya fue confirmado
+        if (confirmToken.isConfirmed()) {
+            return AuthDtos.ConfirmacionResponse.builder()
+                    .success(false)
+                    .message("Esta cuenta ya fue confirmada anteriormente")
+                    .build();
+        }
+        
+        // Verificar si expiró
+        if (confirmToken.isExpired()) {
+            return AuthDtos.ConfirmacionResponse.builder()
+                    .success(false)
+                    .message("El token de confirmación ha expirado. Por favor solicita uno nuevo.")
+                    .build();
+        }
+        
+        // Buscar el usuario
+        AppUser user = userRepository.findById(confirmToken.getUserId())
+                .orElse(null);
+        
+        if (user == null) {
+            return AuthDtos.ConfirmacionResponse.builder()
+                    .success(false)
+                    .message("Usuario asociado al token no encontrado")
+                    .build();
+        }
+        
+        // Confirmar el email
+        user.setEmailConfirmado(true);
+        userRepository.save(user);
+        
+        // Marcar token como usado
+        confirmToken.setConfirmedAt(LocalDateTime.now());
+        confirmacionTokenRepository.save(confirmToken);
+        
+        // Enviar email de confirmación exitosa
+        try {
+            emailService.sendCuentaConfirmadaEmail(user.getEmail(), user.getNombres());
+        } catch (Exception e) {
+            log.warn("No se pudo enviar email de confirmación exitosa: {}", e.getMessage());
+        }
+        
+        log.info("Cuenta confirmada exitosamente para: {}", user.getEmail());
+        
+        return AuthDtos.ConfirmacionResponse.builder()
+                .success(true)
+                .message("¡Tu cuenta ha sido confirmada exitosamente! Ya puedes iniciar sesión.")
+                .email(user.getEmail())
+                .build();
+    }
+    
+    /**
+     * Reenviar email de confirmación
+     */
+    @Transactional
+    public AuthDtos.ConfirmacionResponse reenviarConfirmacion(String email) {
+        // Buscar usuario
+        AppUser user = userRepository.findByEmail(email).orElse(null);
+        
+        if (user == null) {
+            return AuthDtos.ConfirmacionResponse.builder()
+                    .success(false)
+                    .message("No existe una cuenta con ese email")
+                    .build();
+        }
+        
+        // Verificar si ya está confirmado
+        if (Boolean.TRUE.equals(user.getEmailConfirmado())) {
+            return AuthDtos.ConfirmacionResponse.builder()
+                    .success(false)
+                    .message("Esta cuenta ya está confirmada. Puedes iniciar sesión.")
+                    .build();
+        }
+        
+        // Eliminar tokens anteriores
+        confirmacionTokenRepository.deleteByUserId(user.getId());
+        
+        // Generar nuevo token
+        String newToken = UUID.randomUUID().toString();
+        ConfirmacionToken tokenEntity = ConfirmacionToken.builder()
+                .token(newToken)
+                .userId(user.getId())
+                .userEmail(user.getEmail())
+                .createdAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusHours(24))
+                .build();
+        confirmacionTokenRepository.save(tokenEntity);
+        
+        // Enviar email
+        try {
+            emailService.sendConfirmacionCuentaEmail(user.getEmail(), user.getNombres(), newToken);
+            log.info("Email de confirmación reenviado a: {}", user.getEmail());
+        } catch (Exception e) {
+            log.error("Error al reenviar email: {}", e.getMessage());
+            return AuthDtos.ConfirmacionResponse.builder()
+                    .success(false)
+                    .message("Error al enviar el email. Intenta nuevamente más tarde.")
+                    .build();
+        }
+        
+        return AuthDtos.ConfirmacionResponse.builder()
+                .success(true)
+                .message("Se ha enviado un nuevo enlace de confirmación a tu correo.")
+                .build();
     }
 }

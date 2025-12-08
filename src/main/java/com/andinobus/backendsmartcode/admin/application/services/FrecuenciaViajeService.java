@@ -325,8 +325,10 @@ public class FrecuenciaViajeService {
                 .requiereBusEnTerminal(frecuencia.getRequiereBusEnTerminal())
                 .terminalOrigenId(frecuencia.getTerminalOrigen() != null ? frecuencia.getTerminalOrigen().getId() : null)
                 .terminalOrigenNombre(frecuencia.getTerminalOrigen() != null ? frecuencia.getTerminalOrigen().getNombre() : null)
+                .terminalOrigenCanton(frecuencia.getTerminalOrigen() != null ? frecuencia.getTerminalOrigen().getCanton() : null)
                 .terminalDestinoId(frecuencia.getTerminalDestino() != null ? frecuencia.getTerminalDestino().getId() : null)
                 .terminalDestinoNombre(frecuencia.getTerminalDestino() != null ? frecuencia.getTerminalDestino().getNombre() : null)
+                .terminalDestinoCanton(frecuencia.getTerminalDestino() != null ? frecuencia.getTerminalDestino().getCanton() : null)
                 .estado(frecuencia.getEstado())
                 .build();
     }

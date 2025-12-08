@@ -43,8 +43,10 @@ public class FrecuenciaDtos {
         private Boolean requiereBusEnTerminal;
         private Long terminalOrigenId;
         private String terminalOrigenNombre;
+        private String terminalOrigenCanton;
         private Long terminalDestinoId;
         private String terminalDestinoNombre;
+        private String terminalDestinoCanton;
         private String estado;
     }
 

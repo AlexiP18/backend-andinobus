@@ -21,6 +21,7 @@ public class ViajeChoferDtos {
     @Builder
     public static class ViajeChoferResponse {
         private Long id;
+        private Long frecuenciaId; // ID de la frecuencia (cuando no hay viaje creado aún)
         private String origen;
         private String destino;
         private LocalDate fecha;
@@ -31,10 +32,35 @@ public class ViajeChoferDtos {
         private String busPlaca;
         private String busMarca;
         private Integer capacidadTotal;
+        private Integer capacidadPiso1; // Capacidad del primer piso
+        private Integer capacidadPiso2; // Capacidad del segundo piso (0 si es bus de un piso)
         private String estado; // PROGRAMADO | EN_RUTA | COMPLETADO
         private List<PasajeroViaje> pasajeros;
         private Integer totalPasajeros;
         private Integer pasajerosVerificados;
+        
+        // Información de coordenadas para el mapa
+        private CoordenadaDTO coordenadaOrigen;
+        private CoordenadaDTO coordenadaDestino;
+        
+        // Información de la cooperativa para notificaciones
+        private Long cooperativaId;
+        private String cooperativaNombre;
+    }
+    
+    /**
+     * DTO para coordenadas GPS
+     */
+    @Data
+    @NoArgsConstructor
+    @AllArgsConstructor
+    @Builder
+    public static class CoordenadaDTO {
+        private Double latitud;
+        private Double longitud;
+        private String nombreTerminal;
+        private String canton;
+        private String provincia;
     }
 
     /**
@@ -154,7 +180,7 @@ public class ViajeChoferDtos {
     }
 
     /**
-     * DTO para las rutas asignadas a la cooperativa del chofer
+     * DTO para las rutas asignadas al chofer
      */
     @Data
     @NoArgsConstructor
@@ -162,12 +188,15 @@ public class ViajeChoferDtos {
     @Builder
     public static class RutaChoferResponse {
         private Long id;
-        private String origen;
-        private String destino;
+        private String origen; // Cantón de origen
+        private String destino; // Cantón de destino
+        private String terminalOrigenNombre; // Nombre de la terminal de origen
+        private String terminalDestinoNombre; // Nombre de la terminal de destino
         private LocalTime horaSalida;
         private Integer duracionEstimadaMin;
         private String diasOperacion;
         private Boolean activa;
         private Integer totalViajesRealizados; // Total de viajes que el chofer ha hecho en esta ruta
+        private String busPlaca; // Placa del bus asignado a esta frecuencia
     }
 }
